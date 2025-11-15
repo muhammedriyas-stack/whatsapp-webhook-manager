@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { SettingsForm } from "@/components/settings/SettingsForm";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -25,12 +25,7 @@ export default function Settings() {
 
   const fetchSettings = async () => {
     try {
-      const { data, error } = await supabase
-        .from("settings")
-        .select("*")
-        .maybeSingle();
-
-      if (error && error.code !== "PGRST116") throw error;
+      const data = await api.getSettings();
       setSettings(data);
     } catch (error: any) {
       toast({
