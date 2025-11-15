@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { ClientsTable } from "@/components/clients/ClientsTable";
 import { ClientDialog } from "@/components/clients/ClientDialog";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -35,13 +35,8 @@ export default function Clients() {
 
   const fetchClients = async () => {
     try {
-      const { data, error } = await supabase
-        .from("clients")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      setClients((data || []) as Client[]);
+      const data = await api.getClients();
+      setClients(data as Client[]);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -71,18 +66,11 @@ export default function Clients() {
 
   const handleToggleStatus = async (id: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
-        .from("clients")
-        .update({ status: !currentStatus })
-        .eq("id", id);
-
-      if (error) throw error;
-
+      await api.updateClientStatus(id, !currentStatus);
       toast({
         title: "Success",
         description: "Client status updated successfully",
       });
-
       fetchClients();
     } catch (error: any) {
       toast({

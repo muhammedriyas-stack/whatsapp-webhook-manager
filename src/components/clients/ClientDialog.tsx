@@ -5,7 +5,6 @@ import * as z from "zod";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -28,8 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Client } from "@/pages/Clients";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
 const clientSchema = z.object({
@@ -57,7 +55,6 @@ interface ClientDialogProps {
 }
 
 export function ClientDialog({ open, onOpenChange, client, onSuccess }: ClientDialogProps) {
-  const { user } = useAuth();
   const { toast } = useToast();
 
   const form = useForm<ClientFormData>({
@@ -114,41 +111,41 @@ export function ClientDialog({ open, onOpenChange, client, onSuccess }: ClientDi
 
   const onSubmit = async (data: ClientFormData) => {
     try {
-      if (client) {
-        const { error } = await supabase
-          .from("clients")
-          .update(data)
-          .eq("id", client.id);
-
-        if (error) throw error;
+      if (client?.id) {
+        await api.updateClient(client.id, {
+          name: data.name,
+          whatsappNumber: data.whatsapp_number,
+          phoneNumberId: data.phone_number_id,
+          token: data.token,
+          myToken: data.my_token,
+          plan: data.plan,
+          assistantId: data.assistant_id,
+          automated: data.automated,
+          wabaId: data.waba_id,
+          appId: data.app_id,
+          appSecret: data.app_secret,
+          sessionKey: data.session_key,
+        });
 
         toast({
           title: "Success",
           description: "Client updated successfully",
         });
       } else {
-        const insertData = {
+        await api.createClient({
           name: data.name,
-          whatsapp_number: data.whatsapp_number,
-          phone_number_id: data.phone_number_id,
+          whatsappNumber: data.whatsapp_number,
+          phoneNumberId: data.phone_number_id,
           token: data.token,
-          my_token: data.my_token,
+          myToken: data.my_token,
           plan: data.plan,
-          assistant_id: data.assistant_id,
+          assistantId: data.assistant_id,
           automated: data.automated,
-          waba_id: data.waba_id,
-          app_id: data.app_id,
-          app_secret: data.app_secret,
-          session_key: data.session_key,
-          user_id: user?.id!,
-          status: true
-        };
-        
-        const { error } = await supabase
-          .from("clients")
-          .insert([insertData]);
-
-        if (error) throw error;
+          wabaId: data.waba_id,
+          appId: data.app_id,
+          appSecret: data.app_secret,
+          sessionKey: data.session_key,
+        });
 
         toast({
           title: "Success",
@@ -158,6 +155,7 @@ export function ClientDialog({ open, onOpenChange, client, onSuccess }: ClientDi
 
       onSuccess();
       onOpenChange(false);
+      form.reset();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -171,15 +169,12 @@ export function ClientDialog({ open, onOpenChange, client, onSuccess }: ClientDi
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{client ? "Edit Client" : "Add Client"}</DialogTitle>
-          <DialogDescription>
-            {client ? "Update client information" : "Create a new webhook client"}
-          </DialogDescription>
+          <DialogTitle>{client ? "Edit Client" : "Add New Client"}</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="name"
@@ -224,29 +219,6 @@ export function ClientDialog({ open, onOpenChange, client, onSuccess }: ClientDi
 
               <FormField
                 control={form.control}
-                name="plan"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Plan</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="STARTER">Starter</SelectItem>
-                        <SelectItem value="BASIC">Basic</SelectItem>
-                        <SelectItem value="PRO">Pro</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
                 name="token"
                 render={({ field }) => (
                   <FormItem>
@@ -268,6 +240,29 @@ export function ClientDialog({ open, onOpenChange, client, onSuccess }: ClientDi
                     <FormControl>
                       <Input {...field} type="password" />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="plan"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Plan</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a plan" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="STARTER">Starter</SelectItem>
+                        <SelectItem value="BASIC">Basic</SelectItem>
+                        <SelectItem value="PRO">Pro</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -347,9 +342,9 @@ export function ClientDialog({ open, onOpenChange, client, onSuccess }: ClientDi
                 control={form.control}
                 name="automated"
                 render={({ field }) => (
-                  <FormItem className="flex items-center justify-between rounded-lg border p-4">
-                    <div>
-                      <FormLabel>Automated</FormLabel>
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border border-border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">Automated</FormLabel>
                     </div>
                     <FormControl>
                       <Switch
@@ -366,7 +361,10 @@ export function ClientDialog({ open, onOpenChange, client, onSuccess }: ClientDi
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => onOpenChange(false)}
+                onClick={() => {
+                  onOpenChange(false);
+                  form.reset();
+                }}
               >
                 Cancel
               </Button>

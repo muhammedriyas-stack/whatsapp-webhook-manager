@@ -14,8 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SettingsData } from "@/pages/Settings";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
 const settingsSchema = z.object({
@@ -38,7 +37,6 @@ interface SettingsFormProps {
 }
 
 export function SettingsForm({ settings, loading, onSuccess }: SettingsFormProps) {
-  const { user } = useAuth();
   const { toast } = useToast();
 
   const form = useForm<SettingsFormData>({
@@ -73,35 +71,32 @@ export function SettingsForm({ settings, loading, onSuccess }: SettingsFormProps
   const onSubmit = async (data: SettingsFormData) => {
     try {
       if (settings?.id) {
-        const { error } = await supabase
-          .from("settings")
-          .update(data)
-          .eq("id", settings.id);
-
-        if (error) throw error;
+        await api.updateSettings({
+          awsRegion: data.aws_region,
+          awsAccessKeyId: data.aws_access_key_id,
+          awsAccessKeySecret: data.aws_access_key_secret,
+          s3BucketName: data.s3_bucket_name,
+          googleApiKey: data.google_api_key,
+          assistantApiUrl: data.assistant_api_url,
+          automatedAssistantApiUrl: data.automated_assistant_api_url,
+          facebookGraphUrl: data.facebook_graph_url,
+        });
 
         toast({
           title: "Success",
           description: "Settings updated successfully",
         });
       } else {
-        const insertData = {
-          aws_region: data.aws_region,
-          aws_access_key_id: data.aws_access_key_id,
-          aws_access_key_secret: data.aws_access_key_secret,
-          s3_bucket_name: data.s3_bucket_name,
-          google_api_key: data.google_api_key,
-          assistant_api_url: data.assistant_api_url,
-          automated_assistant_api_url: data.automated_assistant_api_url,
-          facebook_graph_url: data.facebook_graph_url,
-          user_id: user?.id!
-        };
-        
-        const { error } = await supabase
-          .from("settings")
-          .insert([insertData]);
-
-        if (error) throw error;
+        await api.createSettings({
+          awsRegion: data.aws_region,
+          awsAccessKeyId: data.aws_access_key_id,
+          awsAccessKeySecret: data.aws_access_key_secret,
+          s3BucketName: data.s3_bucket_name,
+          googleApiKey: data.google_api_key,
+          assistantApiUrl: data.assistant_api_url,
+          automatedAssistantApiUrl: data.automated_assistant_api_url,
+          facebookGraphUrl: data.facebook_graph_url,
+        });
 
         toast({
           title: "Success",
