@@ -13,98 +13,85 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { SettingsData } from "@/pages/Settings";
-import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { ICommonCredentials, useUpdateSettings } from "@/services/settings.service";
 
 const settingsSchema = z.object({
-  aws_region: z.string().min(1, "AWS region is required"),
-  aws_access_key_id: z.string().min(1, "AWS access key ID is required"),
-  aws_access_key_secret: z.string().min(1, "AWS access key secret is required"),
-  s3_bucket_name: z.string().min(1, "S3 bucket name is required"),
-  google_api_key: z.string().min(1, "Google API key is required"),
-  assistant_api_url: z.string().url("Must be a valid URL"),
-  automated_assistant_api_url: z.string().url("Must be a valid URL"),
-  facebook_graph_url: z.string().url("Must be a valid URL"),
+  awsRegion: z.string().min(1, "AWS region is required"),
+  awsAccessKeyId: z.string().min(1, "AWS access key ID is required"),
+  awsAccessKeySecret: z.string().min(1, "AWS access key secret is required"),
+  s3BucketName: z.string().min(1, "S3 bucket name is required"),
+  googleApiKey: z.string().min(1, "Google API key is required"),
+  assistantApiUrl: z.string().url("Must be a valid URL"),
+  automatedAssistantApiUrl: z.string().url("Must be a valid URL"),
+  facebookGraphUrl: z.string().url("Must be a valid URL"),
+  verifyToken: z.string().min(1, "Verify Token Required"),
 });
 
 type SettingsFormData = z.infer<typeof settingsSchema>;
 
 interface SettingsFormProps {
-  settings: SettingsData | null;
+  settings: ICommonCredentials | null;
   loading: boolean;
-  onSuccess: () => void;
 }
 
-export function SettingsForm({ settings, loading, onSuccess }: SettingsFormProps) {
+export function SettingsForm({ settings, loading }: SettingsFormProps) {
   const { toast } = useToast();
 
   const form = useForm<SettingsFormData>({
     resolver: zodResolver(settingsSchema),
     defaultValues: {
-      aws_region: "",
-      aws_access_key_id: "",
-      aws_access_key_secret: "",
-      s3_bucket_name: "",
-      google_api_key: "",
-      assistant_api_url: "",
-      automated_assistant_api_url: "",
-      facebook_graph_url: "",
+      awsRegion: "",
+      awsAccessKeyId: "",
+      awsAccessKeySecret: "",
+      s3BucketName: "",
+      googleApiKey: "",
+      assistantApiUrl: "",
+      automatedAssistantApiUrl: "",
+      facebookGraphUrl: "",
+      verifyToken: ""
     },
   });
 
   useEffect(() => {
     if (settings) {
       form.reset({
-        aws_region: settings.aws_region,
-        aws_access_key_id: settings.aws_access_key_id,
-        aws_access_key_secret: settings.aws_access_key_secret,
-        s3_bucket_name: settings.s3_bucket_name,
-        google_api_key: settings.google_api_key,
-        assistant_api_url: settings.assistant_api_url,
-        automated_assistant_api_url: settings.automated_assistant_api_url,
-        facebook_graph_url: settings.facebook_graph_url,
+        awsRegion: settings.awsRegion,
+        awsAccessKeyId: settings.awsAccessKeyId,
+        awsAccessKeySecret: settings.awsAccessKeySecret,
+        s3BucketName: settings.s3BucketName,
+        googleApiKey: settings.googleApiKey,
+        assistantApiUrl: settings.assistantApiUrl,
+        automatedAssistantApiUrl: settings.automatedAssistantApiUrl,
+        facebookGraphUrl: settings.facebookGraphUrl,
+        verifyToken: settings.verifyToken
       });
     }
   }, [settings, form]);
 
+  const { mutateAsync: updateSettings } = useUpdateSettings()
+
   const onSubmit = async (data: SettingsFormData) => {
     try {
-      if (settings?.id) {
-        await api.updateSettings({
-          awsRegion: data.aws_region,
-          awsAccessKeyId: data.aws_access_key_id,
-          awsAccessKeySecret: data.aws_access_key_secret,
-          s3BucketName: data.s3_bucket_name,
-          googleApiKey: data.google_api_key,
-          assistantApiUrl: data.assistant_api_url,
-          automatedAssistantApiUrl: data.automated_assistant_api_url,
-          facebookGraphUrl: data.facebook_graph_url,
+      if (settings?._id) {
+        await updateSettings({
+          _id: settings?._id,
+          awsRegion: data.awsRegion,
+          awsAccessKeyId: data.awsAccessKeyId,
+          awsAccessKeySecret: data.awsAccessKeySecret,
+          s3BucketName: data.s3BucketName,
+          googleApiKey: data.googleApiKey,
+          assistantApiUrl: data.assistantApiUrl,
+          automatedAssistantApiUrl: data.automatedAssistantApiUrl,
+          facebookGraphUrl: data.facebookGraphUrl,
+          verifyToken: data.verifyToken
         });
 
         toast({
           title: "Success",
           description: "Settings updated successfully",
         });
-      } else {
-        await api.createSettings({
-          awsRegion: data.aws_region,
-          awsAccessKeyId: data.aws_access_key_id,
-          awsAccessKeySecret: data.aws_access_key_secret,
-          s3BucketName: data.s3_bucket_name,
-          googleApiKey: data.google_api_key,
-          assistantApiUrl: data.assistant_api_url,
-          automatedAssistantApiUrl: data.automated_assistant_api_url,
-          facebookGraphUrl: data.facebook_graph_url,
-        });
-
-        toast({
-          title: "Success",
-          description: "Settings created successfully",
-        });
       }
-
-      onSuccess();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -130,7 +117,7 @@ export function SettingsForm({ settings, loading, onSuccess }: SettingsFormProps
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="aws_region"
+                name="awsRegion"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>AWS Region</FormLabel>
@@ -144,12 +131,12 @@ export function SettingsForm({ settings, loading, onSuccess }: SettingsFormProps
 
               <FormField
                 control={form.control}
-                name="aws_access_key_id"
+                name="awsAccessKeyId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>AWS Access Key ID</FormLabel>
                     <FormControl>
-                      <Input {...field} type="password" />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -158,12 +145,12 @@ export function SettingsForm({ settings, loading, onSuccess }: SettingsFormProps
 
               <FormField
                 control={form.control}
-                name="aws_access_key_secret"
+                name="awsAccessKeySecret"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>AWS Access Key Secret</FormLabel>
                     <FormControl>
-                      <Input {...field} type="password" />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -172,7 +159,7 @@ export function SettingsForm({ settings, loading, onSuccess }: SettingsFormProps
 
               <FormField
                 control={form.control}
-                name="s3_bucket_name"
+                name="s3BucketName"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>S3 Bucket Name</FormLabel>
@@ -186,12 +173,12 @@ export function SettingsForm({ settings, loading, onSuccess }: SettingsFormProps
 
               <FormField
                 control={form.control}
-                name="google_api_key"
+                name="googleApiKey"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Google API Key</FormLabel>
                     <FormControl>
-                      <Input {...field} type="password" />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -200,7 +187,7 @@ export function SettingsForm({ settings, loading, onSuccess }: SettingsFormProps
 
               <FormField
                 control={form.control}
-                name="assistant_api_url"
+                name="assistantApiUrl"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Assistant API URL</FormLabel>
@@ -214,7 +201,7 @@ export function SettingsForm({ settings, loading, onSuccess }: SettingsFormProps
 
               <FormField
                 control={form.control}
-                name="automated_assistant_api_url"
+                name="automatedAssistantApiUrl"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Automated Assistant API URL</FormLabel>
@@ -228,12 +215,25 @@ export function SettingsForm({ settings, loading, onSuccess }: SettingsFormProps
 
               <FormField
                 control={form.control}
-                name="facebook_graph_url"
+                name="facebookGraphUrl"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Facebook Graph URL</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="https://graph.facebook.com" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="verifyToken"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Verify Token <span className="text-gray-500 ml-2">(Common Verify Token)</span></FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="my_token" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

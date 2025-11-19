@@ -1,65 +1,60 @@
+// Auth.tsx
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { MessageCircle } from "lucide-react";
 
 export default function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { signIn, signUp, user } = useAuth();
+
+  const { signIn, user, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // If already logged in → redirect
   useEffect(() => {
-    if (user) {
-      navigate("/");
-    }
-  }, [user, navigate]);
+    if (user) navigate("/");
+  }, [user, loading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
     try {
-      const { error } = isLogin 
-        ? await signIn(email, password)
-        : await signUp(email, password);
+      e.preventDefault();
+
+      const { error } = await signIn(email, password);
 
       if (error) {
         toast({
-          title: "Error",
-          description: error.message,
+          title: "Login Failed",
+          description: error,
           variant: "destructive",
         });
       } else {
         toast({
-          title: isLogin ? "Welcome back!" : "Account created!",
-          description: isLogin 
-            ? "You have successfully logged in." 
-            : "Your account has been created. You can now log in.",
+          title: "Welcome!",
+          description: "Successfully logged in.",
         });
-        
-        if (!isLogin) {
-          setIsLogin(true);
-          setPassword("");
-        }
       }
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message || "An unexpected error occurred",
+        title: "Login Failed",
+        description: error?.response?.data?.message || error?.message || 'An error occurred',
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
+
   };
 
   return (
@@ -70,16 +65,14 @@ export default function Auth() {
             <MessageCircle className="h-6 w-6 text-primary-foreground" />
           </div>
           <CardTitle className="text-2xl">WhatsApp Webhook Manager</CardTitle>
-          <CardDescription>
-            {isLogin ? "Sign in to your account" : "Create a new account"}
-          </CardDescription>
+          <CardDescription>Sign in to your account</CardDescription>
         </CardHeader>
+
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label>Email</Label>
               <Input
-                id="email"
                 type="email"
                 placeholder="you@example.com"
                 value={email}
@@ -87,10 +80,10 @@ export default function Auth() {
                 required
               />
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label>Password</Label>
               <Input
-                id="password"
                 type="password"
                 placeholder="••••••••"
                 value={password}
@@ -99,20 +92,11 @@ export default function Auth() {
                 minLength={6}
               />
             </div>
+
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Loading..." : isLogin ? "Sign In" : "Sign Up"}
+              {loading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
-          
-          <div className="mt-4 text-center text-sm">
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-primary hover:underline"
-            >
-              {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
-            </button>
-          </div>
         </CardContent>
       </Card>
     </div>

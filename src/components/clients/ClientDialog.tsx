@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -26,52 +25,54 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Client } from "@/pages/Clients";
-import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { IClient, useCreateClient, useUpdateClient } from "@/services/client.service";
+import { Loader2 } from "lucide-react";
 
 const clientSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  whatsapp_number: z.string().min(1, "WhatsApp number is required"),
-  phone_number_id: z.string().min(1, "Phone number ID is required"),
+  whatsappNumber: z.string().min(1, "WhatsApp number is required"),
+  phoneNumberId: z.string().min(1, "Phone number ID is required"),
   token: z.string().min(1, "Token is required"),
-  my_token: z.string().min(1, "My token is required"),
   plan: z.enum(["STARTER", "BASIC", "PRO"]),
-  assistant_id: z.string().min(1, "Assistant ID is required"),
+  assistantId: z.string().min(1, "Assistant ID is required"),
   automated: z.boolean(),
-  waba_id: z.string().min(1, "WABA ID is required"),
-  app_id: z.string().min(1, "App ID is required"),
-  app_secret: z.string().min(1, "App secret is required"),
-  session_key: z.string().min(1, "Session key is required"),
+  wabaId: z.string().min(1, "WABA ID is required"),
+  appId: z.string(),
+  appSecret: z.string(),
+  sessionKey: z.string().min(1, "Session key is required"),
+  webhookUrlProd: z.string(),
+  webhookUrlDev: z.string(),
 });
 
 type ClientFormData = z.infer<typeof clientSchema>;
 
 interface ClientDialogProps {
   open: boolean;
+  loading: boolean;
   onOpenChange: (open: boolean) => void;
-  client: Client | null;
-  onSuccess: () => void;
+  client: IClient | null;
 }
 
-export function ClientDialog({ open, onOpenChange, client, onSuccess }: ClientDialogProps) {
+export function ClientDialog({ open, loading, onOpenChange, client }: ClientDialogProps) {
   const { toast } = useToast();
 
   const form = useForm<ClientFormData>({
     resolver: zodResolver(clientSchema),
     defaultValues: {
       name: "",
-      whatsapp_number: "",
-      phone_number_id: "",
+      whatsappNumber: "",
+      phoneNumberId: "",
       token: "",
-      my_token: "",
       plan: "STARTER",
-      assistant_id: "",
+      assistantId: "",
       automated: false,
-      waba_id: "",
-      app_id: "",
-      app_secret: "",
-      session_key: "",
+      wabaId: "",
+      appId: "",
+      appSecret: "",
+      sessionKey: "",
+      webhookUrlProd: "",
+      webhookUrlDev: ""
     },
   });
 
@@ -79,52 +80,60 @@ export function ClientDialog({ open, onOpenChange, client, onSuccess }: ClientDi
     if (client) {
       form.reset({
         name: client.name,
-        whatsapp_number: client.whatsapp_number,
-        phone_number_id: client.phone_number_id,
+        whatsappNumber: client.whatsappNumber,
+        phoneNumberId: client.phoneNumberId,
         token: client.token,
-        my_token: client.my_token,
         plan: client.plan,
-        assistant_id: client.assistant_id,
+        assistantId: client.assistantId,
         automated: client.automated,
-        waba_id: client.waba_id,
-        app_id: client.app_id,
-        app_secret: client.app_secret,
-        session_key: client.session_key,
+        wabaId: client.wabaId,
+        appId: client.appId,
+        appSecret: client.appSecret,
+        sessionKey: client.sessionKey,
+        webhookUrlProd: client.webhookUrlProd,
+        webhookUrlDev: client.webhookUrlDev,
       });
     } else {
       form.reset({
         name: "",
-        whatsapp_number: "",
-        phone_number_id: "",
+        whatsappNumber: "",
+        phoneNumberId: "",
         token: "",
-        my_token: "",
         plan: "STARTER",
-        assistant_id: "",
+        assistantId: "",
         automated: false,
-        waba_id: "",
-        app_id: "",
-        app_secret: "",
-        session_key: "",
+        wabaId: "",
+        appId: "",
+        appSecret: "",
+        sessionKey: "",
+        webhookUrlProd: "",
+        webhookUrlDev: ""
       });
     }
-  }, [client, form]);
+  }, [client, form, loading]);
+
+  //MUTATIONS
+  const { mutateAsync: createClient, isPending: isPendingCreateClient } = useCreateClient()
+  const { mutateAsync: updateClient, isPending: isPendingUpdateClient } = useUpdateClient()
 
   const onSubmit = async (data: ClientFormData) => {
     try {
-      if (client?.id) {
-        await api.updateClient(client.id, {
+      if (client?._id) {
+        await updateClient({
+          _id: client._id,
           name: data.name,
-          whatsappNumber: data.whatsapp_number,
-          phoneNumberId: data.phone_number_id,
+          whatsappNumber: data.whatsappNumber,
+          phoneNumberId: data.phoneNumberId,
           token: data.token,
-          myToken: data.my_token,
           plan: data.plan,
-          assistantId: data.assistant_id,
+          assistantId: data.assistantId,
           automated: data.automated,
-          wabaId: data.waba_id,
-          appId: data.app_id,
-          appSecret: data.app_secret,
-          sessionKey: data.session_key,
+          wabaId: data.wabaId,
+          appId: data.appId,
+          appSecret: data.appSecret,
+          sessionKey: data.sessionKey,
+          webhookUrlProd: data.webhookUrlProd,
+          webhookUrlDev: data.webhookUrlDev,
         });
 
         toast({
@@ -132,19 +141,20 @@ export function ClientDialog({ open, onOpenChange, client, onSuccess }: ClientDi
           description: "Client updated successfully",
         });
       } else {
-        await api.createClient({
+        await createClient({
           name: data.name,
-          whatsappNumber: data.whatsapp_number,
-          phoneNumberId: data.phone_number_id,
+          whatsappNumber: data.whatsappNumber,
+          phoneNumberId: data.phoneNumberId,
           token: data.token,
-          myToken: data.my_token,
           plan: data.plan,
-          assistantId: data.assistant_id,
+          assistantId: data.assistantId,
           automated: data.automated,
-          wabaId: data.waba_id,
-          appId: data.app_id,
-          appSecret: data.app_secret,
-          sessionKey: data.session_key,
+          wabaId: data.wabaId,
+          appId: data.appId,
+          appSecret: data.appSecret,
+          sessionKey: data.sessionKey,
+          webhookUrlProd: data.webhookUrlProd,
+          webhookUrlDev: data.webhookUrlDev,
         });
 
         toast({
@@ -153,17 +163,18 @@ export function ClientDialog({ open, onOpenChange, client, onSuccess }: ClientDi
         });
       }
 
-      onSuccess();
       onOpenChange(false);
       form.reset();
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message,
+        description: error?.response?.data?.message || error?.message || 'An error occurred',
         variant: "destructive",
       });
     }
   };
+
+  const isSubmitting = isPendingCreateClient || isPendingUpdateClient;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -191,7 +202,7 @@ export function ClientDialog({ open, onOpenChange, client, onSuccess }: ClientDi
 
               <FormField
                 control={form.control}
-                name="whatsapp_number"
+                name="whatsappNumber"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>WhatsApp Number</FormLabel>
@@ -205,7 +216,7 @@ export function ClientDialog({ open, onOpenChange, client, onSuccess }: ClientDi
 
               <FormField
                 control={form.control}
-                name="phone_number_id"
+                name="phoneNumberId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Phone Number ID</FormLabel>
@@ -224,21 +235,7 @@ export function ClientDialog({ open, onOpenChange, client, onSuccess }: ClientDi
                   <FormItem>
                     <FormLabel>Token</FormLabel>
                     <FormControl>
-                      <Input {...field} type="password" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="my_token"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>My Token</FormLabel>
-                    <FormControl>
-                      <Input {...field} type="password" />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -270,7 +267,7 @@ export function ClientDialog({ open, onOpenChange, client, onSuccess }: ClientDi
 
               <FormField
                 control={form.control}
-                name="assistant_id"
+                name="assistantId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Assistant ID</FormLabel>
@@ -284,7 +281,7 @@ export function ClientDialog({ open, onOpenChange, client, onSuccess }: ClientDi
 
               <FormField
                 control={form.control}
-                name="waba_id"
+                name="wabaId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>WABA ID</FormLabel>
@@ -298,7 +295,7 @@ export function ClientDialog({ open, onOpenChange, client, onSuccess }: ClientDi
 
               <FormField
                 control={form.control}
-                name="app_id"
+                name="appId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>App ID</FormLabel>
@@ -312,12 +309,12 @@ export function ClientDialog({ open, onOpenChange, client, onSuccess }: ClientDi
 
               <FormField
                 control={form.control}
-                name="app_secret"
+                name="appSecret"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>App Secret</FormLabel>
                     <FormControl>
-                      <Input {...field} type="password" />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -326,7 +323,7 @@ export function ClientDialog({ open, onOpenChange, client, onSuccess }: ClientDi
 
               <FormField
                 control={form.control}
-                name="session_key"
+                name="sessionKey"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Session Key</FormLabel>
@@ -338,23 +335,6 @@ export function ClientDialog({ open, onOpenChange, client, onSuccess }: ClientDi
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="automated"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border border-border p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">Automated</FormLabel>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
             </div>
 
             <div className="flex justify-end gap-2">
@@ -368,8 +348,9 @@ export function ClientDialog({ open, onOpenChange, client, onSuccess }: ClientDi
               >
                 Cancel
               </Button>
-              <Button type="submit">
-                {client ? "Update" : "Create"}
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : `${client ? "Update" : "Create"}`}
+
               </Button>
             </div>
           </form>

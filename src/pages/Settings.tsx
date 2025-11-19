@@ -1,48 +1,14 @@
-import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { SettingsForm } from "@/components/settings/SettingsForm";
-import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-
-export interface SettingsData {
-  id?: string;
-  aws_region: string;
-  aws_access_key_id: string;
-  aws_access_key_secret: string;
-  s3_bucket_name: string;
-  google_api_key: string;
-  assistant_api_url: string;
-  automated_assistant_api_url: string;
-  facebook_graph_url: string;
-}
+import { useGetSettings } from "@/services/settings.service";
 
 export default function Settings() {
-  const [settings, setSettings] = useState<SettingsData | null>(null);
-  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const fetchSettings = async () => {
-    try {
-      const data = await api.getSettings();
-      setSettings(data);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (user) {
-      fetchSettings();
-    }
-  }, [user]);
+  const { data: settings, isLoading } = useGetSettings();
 
   return (
     <DashboardLayout>
@@ -54,8 +20,7 @@ export default function Settings() {
 
         <SettingsForm
           settings={settings}
-          loading={loading}
-          onSuccess={fetchSettings}
+          loading={isLoading}
         />
       </div>
     </DashboardLayout>

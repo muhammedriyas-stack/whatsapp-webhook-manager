@@ -1,87 +1,82 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
-import { api } from "@/lib/api";
-
-interface User {
-  id: string;
-  email: string;
-  [key: string]: any;
-}
+import { login, useLogin } from "@/services/auth.service";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
+import { useLocation, useNavigate, useResolvedPath } from "react-router-dom";
 
 interface AuthContextType {
-  user: User | null;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string) => Promise<{ error: any }>;
-  signOut: () => Promise<void>;
+  user: string | null;
   loading: boolean;
+  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signOut: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const { pathname } = useLocation();
+  // ────────────────────────────────────────────────
+  // Load user on mount (token-based auto-login)
+  // ────────────────────────────────────────────────
   useEffect(() => {
-    const checkAuth = async () => {
-      const token = api.getToken();
-      if (token) {
-        try {
-          const { user: userData } = await api.getUser();
-          setUser(userData);
-        } catch (error) {
-          api.setToken(null);
-          setUser(null);
-        }
-      }
+    const token = localStorage.getItem("user_token");
+    if (token) {
+      setUser(token);
       setLoading(false);
-    };
-
-    checkAuth();
+      navigate(pathname);
+      return;
+    } else {
+      setUser(null);
+      setLoading(false);
+      navigate("/auth");
+      return;
+    }
   }, []);
 
+
+  // ────────────────────────────────────────────────
+  // Sign In
+  // ────────────────────────────────────────────────
   const signIn = async (email: string, password: string) => {
-    try {
-      const { token, user: userData } = await api.login(email, password);
-      api.setToken(token);
-      setUser(userData);
+    const res = await login({ email, password });
+
+    if (res?.data) {
+      localStorage.setItem("user_token", res?.data?.accessToken);
+      setUser(res?.data?.user);
+      setLoading(false);
       navigate("/");
-      return { error: null };
-    } catch (error: any) {
-      return { error: { message: error.message } };
     }
+
+    return { error: null };
   };
 
-  const signUp = async (email: string, password: string) => {
-    try {
-      const { token, user: userData } = await api.signup(email, password);
-      api.setToken(token);
-      setUser(userData);
-      navigate("/");
-      return { error: null };
-    } catch (error: any) {
-      return { error: { message: error.message } };
-    }
-  };
-
-  const signOut = async () => {
-    api.setToken(null);
+  // ────────────────────────────────────────────────
+  // Sign Out
+  // ────────────────────────────────────────────────
+  const signOut = () => {
+    localStorage.removeItem("user_token");
     setUser(null);
     navigate("/auth");
+    setLoading(false);
   };
 
   return (
-    <AuthContext.Provider value={{ user, signIn, signUp, signOut, loading }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
+export const useAuth = () => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
+  return ctx;
 }
