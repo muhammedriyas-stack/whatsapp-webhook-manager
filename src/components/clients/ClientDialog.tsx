@@ -40,7 +40,6 @@ const clientSchema = z.object({
   wabaId: z.string().min(1, "WABA ID is required"),
   appId: z.string(),
   appSecret: z.string(),
-  sessionKey: z.string().min(1, "Session key is required"),
   webhookUrlProd: z.string(),
   webhookUrlDev: z.string(),
 });
@@ -70,7 +69,6 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
       wabaId: "",
       appId: "",
       appSecret: "",
-      sessionKey: "",
       webhookUrlProd: "",
       webhookUrlDev: ""
     },
@@ -89,7 +87,6 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
         wabaId: client.wabaId,
         appId: client.appId,
         appSecret: client.appSecret,
-        sessionKey: client.sessionKey,
         webhookUrlProd: client.webhookUrlProd,
         webhookUrlDev: client.webhookUrlDev,
       });
@@ -105,7 +102,6 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
         wabaId: "",
         appId: "",
         appSecret: "",
-        sessionKey: "",
         webhookUrlProd: "",
         webhookUrlDev: ""
       });
@@ -131,7 +127,6 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
           wabaId: data.wabaId,
           appId: data.appId,
           appSecret: data.appSecret,
-          sessionKey: data.sessionKey,
           webhookUrlProd: data.webhookUrlProd,
           webhookUrlDev: data.webhookUrlDev,
         });
@@ -152,7 +147,6 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
           wabaId: data.wabaId,
           appId: data.appId,
           appSecret: data.appSecret,
-          sessionKey: data.sessionKey,
           webhookUrlProd: data.webhookUrlProd,
           webhookUrlDev: data.webhookUrlDev,
         });
@@ -313,20 +307,6 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>App Secret</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="sessionKey"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Session Key</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
