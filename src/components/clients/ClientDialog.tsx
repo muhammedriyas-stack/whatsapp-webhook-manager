@@ -16,6 +16,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,16 +31,16 @@ import { IClient, useCreateClient, useUpdateClient } from "@/services/client.ser
 import { Loader2 } from "lucide-react";
 
 const clientSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  whatsappNumber: z.string().min(1, "WhatsApp number is required"),
+  displayName: z.string().min(1, "Name is required"),
+  phoneNumber: z.string().min(1, "WhatsApp number is required"),
   phoneNumberId: z.string().min(1, "Phone number ID is required"),
-  token: z.string().min(1, "Token is required"),
+  accessToken: z.string().min(1, "Token is required"),
   plan: z.enum(["STARTER", "BASIC", "PRO"]),
   assistantId: z.string().min(1, "Assistant ID is required"),
   automated: z.boolean(),
-  wabaId: z.string().min(1, "WABA ID is required"),
+  whatsappBusinessId: z.string().min(1, "WABA ID is required"),
   appId: z.string(),
-  appSecret: z.string(),
+  secretKey: z.string(),
   webhookUrlProd: z.string(),
   webhookUrlDev: z.string(),
 });
@@ -59,16 +60,16 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
   const form = useForm<ClientFormData>({
     resolver: zodResolver(clientSchema),
     defaultValues: {
-      name: "",
-      whatsappNumber: "",
+      displayName: "",
+      phoneNumber: "",
       phoneNumberId: "",
-      token: "",
+      accessToken: "",
       plan: "STARTER",
       assistantId: "",
       automated: false,
-      wabaId: "",
+      whatsappBusinessId: "",
       appId: "",
-      appSecret: "",
+      secretKey: "",
       webhookUrlProd: "",
       webhookUrlDev: ""
     },
@@ -77,31 +78,31 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
   useEffect(() => {
     if (client) {
       form.reset({
-        name: client.name,
-        whatsappNumber: client.whatsappNumber,
+        displayName: client.displayName,
+        phoneNumber: client.phoneNumber,
         phoneNumberId: client.phoneNumberId,
-        token: client.token,
+        accessToken: client.accessToken,
         plan: client.plan,
         assistantId: client.assistantId,
         automated: client.automated,
-        wabaId: client.wabaId,
+        whatsappBusinessId: client.whatsappBusinessId,
         appId: client.appId,
-        appSecret: client.appSecret,
+        secretKey: client.secretKey,
         webhookUrlProd: client.webhookUrlProd,
         webhookUrlDev: client.webhookUrlDev,
       });
     } else {
       form.reset({
-        name: "",
-        whatsappNumber: "",
+        displayName: "",
+        phoneNumber: "",
         phoneNumberId: "",
-        token: "",
+        accessToken: "",
         plan: "STARTER",
         assistantId: "",
         automated: false,
-        wabaId: "",
+        whatsappBusinessId: "",
         appId: "",
-        appSecret: "",
+        secretKey: "",
         webhookUrlProd: "",
         webhookUrlDev: ""
       });
@@ -117,16 +118,16 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
       if (client?._id) {
         await updateClient({
           _id: client._id,
-          name: data.name,
-          whatsappNumber: data.whatsappNumber,
+          displayName: data.displayName,
+          phoneNumber: data.phoneNumber,
           phoneNumberId: data.phoneNumberId,
-          token: data.token,
+          accessToken: data.accessToken,
           plan: data.plan,
           assistantId: data.assistantId,
           automated: data.automated,
-          wabaId: data.wabaId,
+          whatsappBusinessId: data.whatsappBusinessId,
           appId: data.appId,
-          appSecret: data.appSecret,
+          secretKey: data.secretKey,
           webhookUrlProd: data.webhookUrlProd,
           webhookUrlDev: data.webhookUrlDev,
         });
@@ -137,16 +138,16 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
         });
       } else {
         await createClient({
-          name: data.name,
-          whatsappNumber: data.whatsappNumber,
+          displayName: data.displayName,
+          phoneNumber: data.phoneNumber,
           phoneNumberId: data.phoneNumberId,
-          token: data.token,
+          accessToken: data.accessToken,
           plan: data.plan,
           assistantId: data.assistantId,
           automated: data.automated,
-          wabaId: data.wabaId,
+          whatsappBusinessId: data.whatsappBusinessId,
           appId: data.appId,
-          appSecret: data.appSecret,
+          secretKey: data.secretKey,
           webhookUrlProd: data.webhookUrlProd,
           webhookUrlDev: data.webhookUrlDev,
         });
@@ -182,7 +183,7 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="name"
+                name="displayName"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Name</FormLabel>
@@ -196,7 +197,7 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
 
               <FormField
                 control={form.control}
-                name="whatsappNumber"
+                name="phoneNumber"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>WhatsApp Number</FormLabel>
@@ -224,7 +225,7 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
 
               <FormField
                 control={form.control}
-                name="token"
+                name="accessToken"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Token</FormLabel>
@@ -275,7 +276,7 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
 
               <FormField
                 control={form.control}
-                name="wabaId"
+                name="whatsappBusinessId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>WABA ID</FormLabel>
@@ -303,10 +304,10 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
 
               <FormField
                 control={form.control}
-                name="appSecret"
+                name="secretKey"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>App Secret</FormLabel>
+                    <FormLabel>Secret Key</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -314,6 +315,26 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="automated"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>Automated</FormLabel>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
 
             </div>
 

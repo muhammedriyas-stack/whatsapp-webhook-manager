@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "../ui/pagination";
 
 interface ClientsTableProps {
   clients: IClient[];
@@ -81,7 +82,7 @@ export function ClientsTable({
     return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
   }
 
-  if (clients.length === 0) {
+  if (!loading && !clients || clients?.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
         No clients found. Add your first client to get started.
@@ -93,7 +94,7 @@ export function ClientsTable({
   return (
     <>
       <div className="rounded-md border border-border">
-        <Table>
+        {clients && clients?.length > 0 && <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
@@ -109,12 +110,12 @@ export function ClientsTable({
           </TableHeader>
 
           <TableBody>
-            {clients.map((client) => (
+            {clients?.map((client) => (
               <TableRow key={client._id}>
-                <TableCell className="font-medium">{client.name}</TableCell>
-                <TableCell className="font-medium">{client.whatsappNumber}</TableCell>
+                <TableCell className="font-medium">{client.displayName}</TableCell>
+                <TableCell className="font-medium">{client.phoneNumber}</TableCell>
                 <TableCell className="font-medium">{client.phoneNumberId}</TableCell>
-                <TableCell className="font-medium">{client.wabaId}</TableCell>
+                <TableCell className="font-medium">{client.whatsappBusinessId}</TableCell>
                 <TableCell className="font-medium">{client.assistantId}</TableCell>
 
                 <TableCell>
@@ -174,31 +175,107 @@ export function ClientsTable({
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+        </Table>}
       </div>
 
       {/* Pagination Controls */}
-      <div className="flex items-center justify-between py-4">
-        <Button
-          variant="outline"
-          disabled={page === 0}
-          onClick={() => onPageChange(page - 1)}
-        >
-          Previous
-        </Button>
+      {clients && clients.length > 0 && (
+        <Pagination className="py-4">
+          <PaginationContent>
 
-        <div className="text-sm text-muted-foreground">
-          Page {page + 1} of {totalPages}
-        </div>
+            {/* Previous */}
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (page > 0) onPageChange(page - 1);
+                }}
+                className={page === 0 ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
 
-        <Button
-          variant="outline"
-          disabled={page === totalPages - 1}
-          onClick={() => onPageChange(page + 1)}
-        >
-          Next
-        </Button>
-      </div>
+            {/* First page always visible */}
+            <PaginationItem>
+              <PaginationLink
+                href="#"
+                isActive={page === 0}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onPageChange(0);
+                }}
+              >
+                1
+              </PaginationLink>
+            </PaginationItem>
+
+            {/* Left Ellipsis */}
+            {page > 2 && (
+              <PaginationItem>
+                <PaginationEllipsis />
+              </PaginationItem>
+            )}
+
+            {/* Dynamic middle pages */}
+            {Array.from({ length: totalPages })
+              .map((_, i) => i)
+              .filter((i) => i >= page - 1 && i <= page + 1) // show only 3 pages
+              .filter((i) => i !== 0 && i !== totalPages - 1) // avoid duplicate first/last
+              .map((i) => (
+                <PaginationItem key={i}>
+                  <PaginationLink
+                    href="#"
+                    isActive={page === i}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onPageChange(i);
+                    }}
+                  >
+                    {i + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+
+            {/* Right Ellipsis */}
+            {page < totalPages - 3 && (
+              <PaginationItem>
+                <PaginationEllipsis />
+              </PaginationItem>
+            )}
+
+            {/* Last page always visible */}
+            {totalPages > 1 && (
+              <PaginationItem>
+                <PaginationLink
+                  href="#"
+                  isActive={page === totalPages - 1}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onPageChange(totalPages - 1);
+                  }}
+                >
+                  {totalPages}
+                </PaginationLink>
+              </PaginationItem>
+            )}
+
+            {/* Next */}
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (page < totalPages - 1) onPageChange(page + 1);
+                }}
+                className={page === totalPages - 1 ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
+
+          </PaginationContent>
+        </Pagination>
+      )}
+
+
 
       {/* ---------- CONFIRM DELETE DIALOG ---------- */}
       <ConfirmDialog
@@ -209,7 +286,7 @@ export function ClientsTable({
         title="Delete Client?"
         description={
           selectedClient
-            ? `Are you sure you want to delete "${selectedClient.name}"? This action cannot be undone.`
+            ? `Are you sure you want to delete "${selectedClient.displayName}"? This action cannot be undone.`
             : "Are you sure you want to delete this client?"
         }
         confirmText="Delete"

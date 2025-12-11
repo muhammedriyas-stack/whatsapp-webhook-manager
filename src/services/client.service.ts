@@ -10,11 +10,11 @@ export type ClientPlan = "STARTER" | "BASIC" | "PRO";
 export interface IClient {
     _id: string;
 
-    name: string;
-    whatsappNumber: string;
+    displayName: string;
+    phoneNumber: string;
     phoneNumberId: string;
 
-    token: string;
+    accessToken: string;
     plan: ClientPlan;
 
     assistantId: string;
@@ -22,11 +22,9 @@ export interface IClient {
 
     isActive: boolean;
 
-    wabaId: string;
+    whatsappBusinessId: string;
     appId: string;
-    appSecret: string;
-
-    sessionKey: string;
+    secretKey: string;
 
     webhookUrlProd: string;
     webhookUrlDev: string;

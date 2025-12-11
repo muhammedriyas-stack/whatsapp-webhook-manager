@@ -73,25 +73,25 @@ export function SettingsForm({ settings, loading }: SettingsFormProps) {
 
   const onSubmit = async (data: SettingsFormData) => {
     try {
-      if (settings?._id) {
-        await updateSettings({
-          _id: settings?._id,
-          awsRegion: data.awsRegion,
-          awsAccessKeyId: data.awsAccessKeyId,
-          awsAccessKeySecret: data.awsAccessKeySecret,
-          s3BucketName: data.s3BucketName,
-          googleApiKey: data.googleApiKey,
-          assistantApiUrl: data.assistantApiUrl,
-          automatedAssistantApiUrl: data.automatedAssistantApiUrl,
-          facebookGraphUrl: data.facebookGraphUrl,
-          verifyToken: data.verifyToken
-        });
+      // if (settings?._id) {
+      await updateSettings({
+        _id: settings?._id,
+        awsRegion: data.awsRegion,
+        awsAccessKeyId: data.awsAccessKeyId,
+        awsAccessKeySecret: data.awsAccessKeySecret,
+        s3BucketName: data.s3BucketName,
+        googleApiKey: data.googleApiKey,
+        assistantApiUrl: data.assistantApiUrl,
+        automatedAssistantApiUrl: data.automatedAssistantApiUrl,
+        facebookGraphUrl: data.facebookGraphUrl,
+        verifyToken: data.verifyToken
+      });
 
-        toast({
-          title: "Success",
-          description: "Settings updated successfully",
-        });
-      }
+      toast({
+        title: "Success",
+        description: "Settings updated successfully",
+      });
+      // }
     } catch (error: any) {
       toast({
         title: "Error",
