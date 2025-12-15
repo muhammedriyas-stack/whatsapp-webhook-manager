@@ -133,7 +133,7 @@ export default function Clients() {
       <div className="space-y-6">
         {/* HEADER + SEARCH + FILTERS */}
         <div className="flex flex-col gap-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h2 className="text-3xl font-bold">Clients</h2>
               <p className="text-muted-foreground">Manage your webhook clients</p>
@@ -144,12 +144,12 @@ export default function Clients() {
           </div>
 
           {/* 🔍 Search + Filters Row */}
-          <div className="flex gap-3 items-center">
+          <div className="flex flex-wrap gap-3 items-center">
 
             {/* Search */}
             <Input
               placeholder="Search clients..."
-              className="w-64"
+              className="w-full sm:w-64"
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -159,7 +159,7 @@ export default function Clients() {
 
             {/* PLAN FILTER */}
             <Select value={planFilter} onValueChange={setPlanFilter}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-full sm:w-40">
                 <SelectValue placeholder="Filter: Plan" />
               </SelectTrigger>
               <SelectContent>
@@ -171,7 +171,7 @@ export default function Clients() {
 
             {/* AUTOMATED FILTER */}
             <Select value={automatedFilter} onValueChange={setAutomatedFilter}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-full sm:w-40">
                 <SelectValue placeholder="Automated?" />
               </SelectTrigger>
               <SelectContent>
@@ -182,7 +182,7 @@ export default function Clients() {
 
             {/* ACTIVE FILTER */}
             <Select value={activeFilter} onValueChange={setActiveFilter}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-full sm:w-40">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -192,7 +192,7 @@ export default function Clients() {
             </Select>
 
             {/* CLEAR FILTERS */}
-            <Button variant="outline" onClick={clearFilters}>
+            <Button variant="outline" onClick={clearFilters} className="w-full sm:w-auto">
               Clear Filters
             </Button>
           </div>

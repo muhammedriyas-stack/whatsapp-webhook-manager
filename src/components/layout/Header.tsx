@@ -9,12 +9,12 @@ export function Header() {
   const { signOut } = useAuth();
 
   return (
-    <header className="h-16 border-b border-border bg-card flex items-center justify-between px-6">
+    <header className="h-16 min-h-16 border-b border-border bg-card flex items-center justify-between px-6 sticky top-0 z-10">
       <div className="flex items-center gap-4">
         <SidebarTrigger />
         <h1 className="text-xl font-semibold text-foreground">WhatsApp Webhook Manager</h1>
       </div>
-      
+
       <div className="flex items-center gap-2">
         <Button
           variant="ghost"
@@ -28,7 +28,7 @@ export function Header() {
             <Sun className="h-5 w-5" />
           )}
         </Button>
-        
+
         <Button
           variant="ghost"
           size="icon"

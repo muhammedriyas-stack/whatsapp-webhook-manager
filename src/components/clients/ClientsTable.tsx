@@ -93,7 +93,7 @@ export function ClientsTable({
   // --------------- TABLE ---------------
   return (
     <>
-      <div className="rounded-md border border-border">
+      <div className="rounded-md border border-border overflow-x-auto">
         {clients && clients?.length > 0 && <Table>
           <TableHeader>
             <TableRow>
