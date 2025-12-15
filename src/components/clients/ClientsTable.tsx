@@ -30,7 +30,7 @@ interface ClientsTableProps {
   clients: IClient[];
   loading: boolean;
   onEdit: (client: IClient) => void;
-  onToggleStatus: (id: string, currentStatus: boolean) => void;
+  onToggleStatus: (id: string, currentStatus: boolean) => Promise<void>;
   onOverride: (client: IClient) => void;
   onDelete: (id: string) => Promise<void>;
   total: number;
@@ -56,11 +56,18 @@ export function ClientsTable({
   const totalPages = Math.ceil(total / limit);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmStatusChangeOpen, setConfirmStatusChangeOpen] = useState(false);
+
   const [selectedClient, setSelectedClient] = useState<IClient | null>(null);
 
   const handleDeleteClick = (client: IClient) => {
     setSelectedClient(client);
     setConfirmOpen(true);
+  };
+
+  const handleStatusChangeClick = (client: IClient) => {
+    setSelectedClient(client);
+    setConfirmStatusChangeOpen(true);
   };
 
   const handleConfirmDelete = async () => {
@@ -72,8 +79,22 @@ export function ClientsTable({
     setSelectedClient(null);
   };
 
+  const handleConfirmStatusChange = async () => {
+    if (!selectedClient) return;
+
+    await onToggleStatus(selectedClient._id, selectedClient.isActive);
+
+    setConfirmStatusChangeOpen(false);
+    setSelectedClient(null);
+  };
+
   const handleCancel = () => {
     setConfirmOpen(false);
+    setSelectedClient(null);
+  };
+
+  const handleCancelStatusChange = () => {
+    setConfirmStatusChangeOpen(false);
     setSelectedClient(null);
   };
 
@@ -141,7 +162,7 @@ export function ClientsTable({
                 <TableCell>
                   <Switch
                     checked={client.isActive}
-                    onCheckedChange={() => onToggleStatus(client._id, client.isActive)}
+                    onCheckedChange={() => handleStatusChangeClick(client)}
                   />
                 </TableCell>
 
@@ -290,6 +311,20 @@ export function ClientsTable({
             : "Are you sure you want to delete this client?"
         }
         confirmText="Delete"
+        cancelText="Cancel"
+      />
+      <ConfirmDialog
+        open={confirmStatusChangeOpen}
+        onCancel={handleCancelStatusChange}
+        onConfirm={handleConfirmStatusChange}
+        destructive
+        title="Change Client Status?"
+        description={
+          selectedClient
+            ? `Are you sure you want to change the status of "${selectedClient.displayName}"?`
+            : "Are you sure you want to change the status of this client?"
+        }
+        confirmText="Change Status"
         cancelText="Cancel"
       />
     </>
