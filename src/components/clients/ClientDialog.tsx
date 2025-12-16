@@ -37,10 +37,10 @@ const clientSchema = z.object({
   accessToken: z.string().min(1, "Token is required"),
   plan: z.enum(["STARTER", "BASIC", "PRO"]),
   assistantId: z.string().min(1, "Assistant ID is required"),
-  automated: z.boolean(),
+  automated: z.boolean().optional(),
   whatsappBusinessId: z.string().min(1, "WABA ID is required"),
   appId: z.string(),
-  secretKey: z.string(),
+  secretKey: z.string().optional(),
   webhookUrlProd: z.string(),
   webhookUrlDev: z.string(),
 });
@@ -78,18 +78,18 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
   useEffect(() => {
     if (client) {
       form.reset({
-        displayName: client.displayName,
-        phoneNumber: client.phoneNumber,
-        phoneNumberId: client.phoneNumberId,
-        accessToken: client.accessToken,
-        plan: client.plan,
-        assistantId: client.assistantId,
-        automated: client.automated,
-        whatsappBusinessId: client.whatsappBusinessId,
-        appId: client.appId,
-        secretKey: client.secretKey,
-        webhookUrlProd: client.webhookUrlProd,
-        webhookUrlDev: client.webhookUrlDev,
+        displayName: client?.displayName || "",
+        phoneNumber: client?.phoneNumber || "",
+        phoneNumberId: client?.phoneNumberId || "",
+        accessToken: client?.accessToken || "",
+        plan: client?.plan || "STARTER",
+        assistantId: client?.assistantId || "",
+        automated: typeof client?.automated === "boolean" ? client?.automated : false,
+        whatsappBusinessId: client?.whatsappBusinessId || "",
+        appId: client?.appId || "",
+        secretKey: client?.secretKey || "",
+        webhookUrlProd: client?.webhookUrlProd || "",
+        webhookUrlDev: client?.webhookUrlDev || "",
       });
     } else {
       form.reset({
@@ -114,6 +114,7 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
   const { mutateAsync: updateClient, isPending: isPendingUpdateClient } = useUpdateClient()
 
   const onSubmit = async (data: ClientFormData) => {
+    console.log(data, 'FORM SUBMITTING');
     try {
       if (client?._id) {
         await updateClient({
@@ -124,7 +125,7 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
           accessToken: data.accessToken,
           plan: data.plan,
           assistantId: data.assistantId,
-          automated: data.automated,
+          automated: typeof data.automated === "boolean" ? data.automated : false,
           whatsappBusinessId: data.whatsappBusinessId,
           appId: data.appId,
           secretKey: data.secretKey,
@@ -144,7 +145,7 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
           accessToken: data.accessToken,
           plan: data.plan,
           assistantId: data.assistantId,
-          automated: data.automated,
+          automated: typeof data.automated === "boolean" ? data.automated : false,
           whatsappBusinessId: data.whatsappBusinessId,
           appId: data.appId,
           secretKey: data.secretKey,
@@ -170,6 +171,8 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
   };
 
   const isSubmitting = isPendingCreateClient || isPendingUpdateClient;
+
+  console.log(isSubmitting, 'IS SUBMITTING');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
