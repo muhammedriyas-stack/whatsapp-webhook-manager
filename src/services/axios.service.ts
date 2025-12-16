@@ -23,7 +23,7 @@ api.interceptors.response.use(
     async (error) => {
         const status = error?.response?.status;
 
-        if (status === 401) {
+        if (status === 401 || status === 403) {
             localStorage.removeItem("user_token");
 
             // Avoid loop if already on /auth
