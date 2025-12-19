@@ -1,4 +1,4 @@
-import { BarChart3, Users, Settings } from "lucide-react";
+import { BarChart3, Users, Settings, Bot } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -16,6 +16,7 @@ import {
 const items = [
   { title: "Analytics", url: "/", icon: BarChart3 },
   { title: "Clients", url: "/clients", icon: Users },
+  { title: "MultiBot", url: "/multibot", icon: Bot },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 

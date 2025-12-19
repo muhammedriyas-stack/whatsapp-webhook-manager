@@ -1,12 +1,10 @@
 "use client";
 
 import { useState } from "react";
-
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { MoreHorizontal, Trash2 } from "lucide-react";
-import { IClient } from "@/services/client.service";
 
 import {
   DropdownMenu,
@@ -17,13 +15,13 @@ import {
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Column, DataTable } from "../common/DataTable";
+import { IMultibot } from "@/services/multibot.service";
 
-interface ClientsTableProps {
-  clients: IClient[];
+interface MultibotsTableProps {
+  multibots: IMultibot[];
   loading: boolean;
-  onEdit: (client: IClient) => void;
+  onEdit: (multibot: IMultibot) => void;
   onToggleStatus: (id: string, currentStatus: boolean) => Promise<void>;
-  onOverride: (client: IClient) => void;
   onDelete: (id: string) => Promise<void>;
   total: number;
   page: number;
@@ -31,8 +29,8 @@ interface ClientsTableProps {
   onPageChange: (page: number) => void;
 }
 
-export function ClientsTable({
-  clients,
+export function MultibotsTable({
+  multibots,
   loading,
   total,
   page,
@@ -40,32 +38,23 @@ export function ClientsTable({
   onPageChange,
   onEdit,
   onToggleStatus,
-  onOverride,
   onDelete,
 
-}: ClientsTableProps) {
+}: MultibotsTableProps) {
 
   // TABLE COLUMNS
-  const columns: Column<IClient>[] = [
+  const columns: Column<IMultibot>[] = [
     {
       header: "Name",
-      cell: (c) => c.displayName,
+      cell: (c) => c.name,
     },
-    {
-      header: "WhatsApp Number",
-      cell: (c) => c.phoneNumber,
-    },
-    {
-      header: "Phone Number ID",
-      cell: (c) => c.phoneNumberId,
-    },
-    {
-      header: "Waba ID",
-      cell: (c) => c.whatsappBusinessId,
-    },
+    // {
+    //   header: "API URL",
+    //   cell: (c) => c.apiUrl,
+    // },
     {
       header: "Assistant ID",
-      cell: (c) => c.assistantId,
+      cell: (c) => c.assistant_id,
     },
     {
       header: "Plan",
@@ -75,14 +64,7 @@ export function ClientsTable({
         </Badge>
       ),
     },
-    {
-      header: "Automated",
-      cell: (c) => (
-        <Badge variant={c.automated ? "default" : "secondary"}>
-          {c.automated ? "Yes" : "No"}
-        </Badge>
-      ),
-    },
+
     {
       header: "Status",
       cell: (c) => (
@@ -96,7 +78,7 @@ export function ClientsTable({
     },
     {
       header: "Actions",
-      className: "text-right",
+      className: "",
       cell: (c) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -108,9 +90,6 @@ export function ClientsTable({
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => onEdit(c)}>
               Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onOverride(c)}>
-              Override
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-red-600"
@@ -130,44 +109,44 @@ export function ClientsTable({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmStatusChangeOpen, setConfirmStatusChangeOpen] = useState(false);
 
-  const [selectedClient, setSelectedClient] = useState<IClient | null>(null);
+  const [selectedMultibot, setSelectedMultibot] = useState<IMultibot | null>(null);
 
-  const handleDeleteClick = (client: IClient) => {
-    setSelectedClient(client);
+  const handleDeleteClick = (multibot: IMultibot) => {
+    setSelectedMultibot(multibot);
     setConfirmOpen(true);
   };
 
-  const handleStatusChangeClick = (client: IClient) => {
-    setSelectedClient(client);
+  const handleStatusChangeClick = (multibot: IMultibot) => {
+    setSelectedMultibot(multibot);
     setConfirmStatusChangeOpen(true);
   };
 
   const handleConfirmDelete = async () => {
-    if (!selectedClient) return;
+    if (!selectedMultibot) return;
 
-    await onDelete(selectedClient._id);
+    await onDelete(selectedMultibot._id);
 
     setConfirmOpen(false);
-    setSelectedClient(null);
+    setSelectedMultibot(null);
   };
 
   const handleConfirmStatusChange = async () => {
-    if (!selectedClient) return;
+    if (!selectedMultibot) return;
 
-    await onToggleStatus(selectedClient._id, selectedClient.isActive);
+    await onToggleStatus(selectedMultibot._id, selectedMultibot.isActive);
 
     setConfirmStatusChangeOpen(false);
-    setSelectedClient(null);
+    setSelectedMultibot(null);
   };
 
   const handleCancel = () => {
     setConfirmOpen(false);
-    setSelectedClient(null);
+    setSelectedMultibot(null);
   };
 
   const handleCancelStatusChange = () => {
     setConfirmStatusChangeOpen(false);
-    setSelectedClient(null);
+    setSelectedMultibot(null);
   };
 
   // --------------- LOADING ---------------
@@ -175,10 +154,10 @@ export function ClientsTable({
     return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
   }
 
-  if (!loading && !clients || clients?.length === 0) {
+  if (!loading && !multibots || multibots?.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
-        No clients found. Add your first client to get started.
+        No multibots found. Add your first multibot to get started.
       </div>
     );
   }
@@ -187,9 +166,9 @@ export function ClientsTable({
   return (
     <>
       <div className="rounded-md border border-border overflow-x-auto">
-        {clients && clients?.length > 0 &&
+        {multibots && multibots?.length > 0 &&
           <DataTable
-            data={clients}
+            data={multibots}
             columns={columns}
             loading={loading}
             total={total}
@@ -206,11 +185,11 @@ export function ClientsTable({
         onCancel={handleCancel}
         onConfirm={handleConfirmDelete}
         destructive
-        title="Delete Client?"
+        title="Delete Bot?"
         description={
-          selectedClient
-            ? `Are you sure you want to delete "${selectedClient.displayName}"? This action cannot be undone.`
-            : "Are you sure you want to delete this client?"
+          selectedMultibot
+            ? `Are you sure you want to delete "${selectedMultibot.name}"? This action cannot be undone.`
+            : "Are you sure you want to delete this bot?"
         }
         confirmText="Delete"
         cancelText="Cancel"
@@ -220,11 +199,11 @@ export function ClientsTable({
         onCancel={handleCancelStatusChange}
         onConfirm={handleConfirmStatusChange}
         destructive
-        title="Change Client Status?"
+        title="Change Bot Status?"
         description={
-          selectedClient
-            ? `Are you sure you want to change the status of "${selectedClient.displayName}"?`
-            : "Are you sure you want to change the status of this client?"
+          selectedMultibot
+            ? `Are you sure you want to change the status of "${selectedMultibot.name}"?`
+            : "Are you sure you want to change the status of this bot?"
         }
         confirmText="Change Status"
         cancelText="Cancel"

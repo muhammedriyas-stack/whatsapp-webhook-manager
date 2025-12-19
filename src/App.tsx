@@ -12,6 +12,7 @@ import Analytics from "./pages/Analytics";
 import Clients from "./pages/Clients";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import MultiBot from "./pages/MultiBot";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Clients />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/multibot"
+                element={
+                  <ProtectedRoute>
+                    <MultiBot />
                   </ProtectedRoute>
                 }
               />
