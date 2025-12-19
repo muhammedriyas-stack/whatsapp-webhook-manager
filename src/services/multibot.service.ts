@@ -15,6 +15,7 @@ export interface IMultibot {
     apiUrl: string;
     plan: ClientPlan;
     isActive: boolean;
+    botType: "DEMO" | "MULTIBOT";
 
     createdAt: Date;
     updatedAt: Date;

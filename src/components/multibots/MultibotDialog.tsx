@@ -27,7 +27,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { IClient, useCreateClient, useUpdateClient } from "@/services/client.service";
 import { Loader2 } from "lucide-react";
 import { IMultibot, useCreateMultibot, useUpdateMultibot } from "@/services/multibot.service";
 
@@ -36,7 +35,8 @@ const multibotSchema = z.object({
   assistant_id: z.string().min(1, "Assistant ID is required"),
   apiUrl: z.string().min(1, "API URL is required"),
   plan: z.enum(["STARTER", "BASIC", "PRO"]),
-  isActive: z.boolean().optional()
+  isActive: z.boolean().optional(),
+  // botType: z.enum(["DEMO", "MULTIBOT"]),
 });
 
 type MultibotFormData = z.infer<typeof multibotSchema>;
@@ -59,6 +59,7 @@ export function MultibotDialog({ open, loading, onOpenChange, multibot }: Multib
       apiUrl: "",
       plan: "STARTER",
       isActive: false,
+      // botType: "MULTIBOT",
     },
   });
 
@@ -70,6 +71,7 @@ export function MultibotDialog({ open, loading, onOpenChange, multibot }: Multib
         apiUrl: multibot?.apiUrl || "",
         plan: multibot?.plan || "STARTER",
         isActive: multibot?.isActive || false,
+        // botType: multibot?.botType || "MULTIBOT",
       });
     } else {
       form.reset({
@@ -78,6 +80,7 @@ export function MultibotDialog({ open, loading, onOpenChange, multibot }: Multib
         apiUrl: "",
         plan: "STARTER",
         isActive: false,
+        // botType: "MULTIBOT",
       });
     }
   }, [multibot, form, loading]);
@@ -90,6 +93,7 @@ export function MultibotDialog({ open, loading, onOpenChange, multibot }: Multib
         apiUrl: multibot?.apiUrl || "",
         plan: multibot?.plan || "STARTER",
         isActive: multibot?.isActive || false,
+        // botType: multibot?.botType || "MULTIBOT",
       });
     } else {
       form.reset({
@@ -98,6 +102,7 @@ export function MultibotDialog({ open, loading, onOpenChange, multibot }: Multib
         apiUrl: "https://voice.kiksy.live/get_text",
         plan: "STARTER",
         isActive: false,
+        // botType: "MULTIBOT",
       });
     }
   }, [multibot, form, loading]);
@@ -116,6 +121,7 @@ export function MultibotDialog({ open, loading, onOpenChange, multibot }: Multib
           apiUrl: data.apiUrl,
           plan: data.plan,
           isActive: data.isActive,
+          // botType: data.botType,
         });
 
         toast({
@@ -129,6 +135,7 @@ export function MultibotDialog({ open, loading, onOpenChange, multibot }: Multib
           apiUrl: data.apiUrl,
           plan: data.plan,
           isActive: data.isActive,
+          // botType: data.botType,
         });
 
         toast({
@@ -176,6 +183,30 @@ export function MultibotDialog({ open, loading, onOpenChange, multibot }: Multib
                 )}
               />
 
+              {/* <FormField
+                control={form.control}
+                name="botType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Bot Type</FormLabel>
+                    <FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a bot type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="DEMO">DEMO</SelectItem>
+                          <SelectItem value="MULTIBOT">MULTIBOT</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              /> */}
               <FormField
                 control={form.control}
                 name="assistant_id"

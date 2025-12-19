@@ -49,8 +49,12 @@ export function MultibotsTable({
       cell: (c) => c.name,
     },
     // {
-    //   header: "API URL",
-    //   cell: (c) => c.apiUrl,
+    //   header: "Bot Type",
+    //   cell: (c) => (
+    //     <Badge variant={c.botType === "DEMO" ? "default" : "outline"}>
+    //       {c.botType}
+    //     </Badge>
+    //   ),
     // },
     {
       header: "Assistant ID",

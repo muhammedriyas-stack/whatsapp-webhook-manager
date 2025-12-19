@@ -2,12 +2,7 @@ import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { ClientDialog } from "@/components/clients/ClientDialog";
 import { useToast } from "@/hooks/use-toast";
-import { IClient, useDeleteClient, useGetClients, useUpdateClient } from "@/services/client.service";
-import { OverrideDialog } from "@/components/clients/OverrideDialog";
-import { useOverrideWebhook } from "@/services/webhook.service";
-import { ClientsTable } from "@/components/clients/ClientsTable";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -30,10 +25,12 @@ export default function MultiBot() {
     // ⬅️ NEW — FILTER STATES
     const [planFilter, setPlanFilter] = useState("");
     const [activeFilter, setActiveFilter] = useState("");
+    // const [botTypeFilter, setBotTypeFilter] = useState("");
 
     const clearFilters = () => {
         setPlanFilter("");
         setActiveFilter("");
+        // setBotTypeFilter("");
     };
 
     // DATA
@@ -146,6 +143,17 @@ export default function MultiBot() {
                                 <SelectItem value="false">Inactive</SelectItem>
                             </SelectContent>
                         </Select>
+
+                        {/* BOT TYPE FILTER */}
+                        {/*     <Select value={botTypeFilter} onValueChange={setBotTypeFilter}>
+                            <SelectTrigger className="w-full sm:w-40">
+                                <SelectValue placeholder="Filter: Bot Type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="DEMO">Demo</SelectItem>
+                                <SelectItem value="MULTIBOT">MultiBot</SelectItem>
+                            </SelectContent>
+                        </Select>*/}
 
                         {/* CLEAR FILTERS */}
                         <Button variant="outline" onClick={clearFilters} className="w-full sm:w-auto">
