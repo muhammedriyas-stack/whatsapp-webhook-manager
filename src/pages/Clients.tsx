@@ -6,11 +6,12 @@ import { ClientDialog } from "@/components/clients/ClientDialog";
 import { useToast } from "@/hooks/use-toast";
 import { IClient, useDeleteClient, useGetClients, useUpdateClient } from "@/services/client.service";
 import { OverrideDialog } from "@/components/clients/OverrideDialog";
-import { useOverrideWebhook } from "@/services/webhook.service";
+import { useOverrideAllWebhook, useOverrideWebhook } from "@/services/webhook.service";
 import { ClientsTable } from "@/components/clients/ClientsTable";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { OverrideAllDialog } from "@/components/clients/OverrideAllDialog";
 
 export default function Clients() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -18,6 +19,8 @@ export default function Clients() {
 
   const [overrideOpen, setOverrideOpen] = useState(false);
   const [overrideClient, setOverrideClient] = useState<IClient | null>(null);
+
+  const [overrideAllOpen, setOverrideAllOpen] = useState(false);
 
   const { toast } = useToast();
 
@@ -46,6 +49,7 @@ export default function Clients() {
   // MUTATIONS
   const { mutateAsync: updateClient, isPending: isPendingUpdateClient } = useUpdateClient();
   const { mutateAsync: overrideWebhook, isPending: isPendingOverriding } = useOverrideWebhook();
+  const { mutateAsync: overrideAllWebhook, isPending: isPendingOverrideAll } = useOverrideAllWebhook();
   const { mutateAsync: deleteClient, isPending: isPendingDeleteClient } = useDeleteClient();
 
   // EDIT HANDLER
@@ -58,6 +62,11 @@ export default function Clients() {
   const handleAdd = () => {
     setEditingClient(null);
     setDialogOpen(true);
+  };
+
+  // OVERRIDE ALL HANDLER
+  const handleOverrideAll = () => {
+    setOverrideAllOpen(true);
   };
 
   // STATUS TOGGLE
@@ -108,6 +117,29 @@ export default function Clients() {
     }
   };
 
+  // SUBMIT OVERRIDE ALL FORM
+  const handleSubmitOverrideAll = async (env: "PRODUCTION" | "DEVELOPMENT", url: string) => {
+    if (!overrideClient) return;
+
+    try {
+      await overrideAllWebhook({ env, url });
+
+      toast({
+        title: "Success",
+        description: `Webhook updated for ${env.toLowerCase()} successfully.`,
+      });
+
+      setOverrideAllOpen(false);
+      refetch();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error?.response?.data?.message || error?.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   // 💥 DELETE HANDLER
   const handleDelete = async (id: string) => {
     try {
@@ -138,9 +170,14 @@ export default function Clients() {
               <h2 className="text-3xl font-bold">Clients</h2>
               <p className="text-muted-foreground">Manage your webhook clients</p>
             </div>
-            <Button onClick={handleAdd}>
-              <Plus className="h-4 w-4 mr-2" /> Add Client
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={handleOverrideAll}>
+                <Plus className="h-4 w-4 mr-2" /> Override All
+              </Button>
+              <Button onClick={handleAdd}>
+                <Plus className="h-4 w-4 mr-2" /> Add Client
+              </Button>
+            </div>
           </div>
 
           {/* 🔍 Search + Filters Row */}
@@ -224,6 +261,13 @@ export default function Clients() {
           client={overrideClient}
           onSubmitOverride={handleSubmitOverride}
           loading={isPendingOverriding}
+        />
+
+        <OverrideAllDialog
+          open={overrideAllOpen}
+          onOpenChange={setOverrideAllOpen}
+          onSubmitOverride={handleSubmitOverrideAll}
+          loading={isPendingOverrideAll}
         />
       </div>
     </DashboardLayout>

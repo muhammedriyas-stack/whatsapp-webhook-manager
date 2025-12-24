@@ -60,3 +60,18 @@ export const useOverrideWebhook = () => {
         },
     });
 };
+
+export const overrideAllWebhookUrl = (obj: Partial<IOverrideClient>) => {
+    return api.post<GeneralApiResponse<IClient>>(`${END_POINT}/all`, obj);
+};
+
+export const useOverrideAllWebhook = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: overrideAllWebhookUrl,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["clients"] });
+            queryClient.invalidateQueries({ queryKey: ["client"] });
+        },
+    });
+};
