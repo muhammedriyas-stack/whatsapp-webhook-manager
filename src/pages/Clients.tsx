@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, RotateCcw } from "lucide-react";
 import { ClientDialog } from "@/components/clients/ClientDialog";
 import { useToast } from "@/hooks/use-toast";
 import { IClient, useDeleteClient, useGetClients, useUpdateClient } from "@/services/client.service";
@@ -172,7 +172,7 @@ export default function Clients() {
             </div>
             <div className="flex gap-2">
               <Button onClick={handleOverrideAll}>
-                <Plus className="h-4 w-4 mr-2" /> Override All
+                <RotateCcw className="h-4 w-4 mr-2" /> Override All
               </Button>
               <Button onClick={handleAdd}>
                 <Plus className="h-4 w-4 mr-2" /> Add Client
