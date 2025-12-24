@@ -19,7 +19,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ReactQueryDevtools initialIsOpen={false} />
-    <BrowserRouter>
+    <BrowserRouter basename="/dashboard_webhook">
       <AuthProvider>
         <ThemeProvider>
           <TooltipProvider>
