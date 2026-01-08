@@ -20,6 +20,7 @@ import {
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Column, DataTable } from "../common/DataTable";
+import { MODE } from "../common/constant.common";
 
 interface ClientsTableProps {
   clients: IClient[];
@@ -65,13 +66,13 @@ export function ClientsTable({
             <Badge
               className={cn(
                 "w-fit text-[10px] md:text-xs px-2 py-0.5 flex items-center gap-1.5 font-semibold transition-all duration-300",
-                c.mode === "PRODUCTION_MODE"
+                c.mode === MODE.PRODUCTION_MODE
                   ? "bg-emerald-500/15 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/25"
                   : "bg-cyan-500/15 text-cyan-500 border-cyan-500/20 hover:bg-cyan-500/25"
               )}
               variant="outline"
             >
-              {c.mode === "PRODUCTION_MODE" ? (
+              {c.mode === MODE.PRODUCTION_MODE ? (
                 <Globe className="w-3 h-3 animate-pulse" />
               ) : (
                 <FlaskConical className="w-3 h-3" />
@@ -115,17 +116,17 @@ export function ClientsTable({
     //     </Badge>
     //   ),
     // },
-    // {
-    //   header: "Status",
-    //   cell: (c) => (
-    //     <Switch
-    //       checked={c.isActive}
-    //       onCheckedChange={() =>
-    //         handleStatusChangeClick(c)
-    //       }
-    //     />
-    //   ),
-    // },
+    {
+      header: "Status",
+      cell: (c) => (
+        <Switch
+          checked={c.isActive}
+          onCheckedChange={() =>
+            handleStatusChangeClick(c)
+          }
+        />
+      ),
+    },
     {
       header: "Actions",
       className: "text-center",
