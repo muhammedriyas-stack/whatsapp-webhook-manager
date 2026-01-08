@@ -1,3 +1,4 @@
+import { MODE_TYPE, PLAN_TYPE } from "@/components/common/constant.common";
 import api from "./axios.service";
 import {
     GeneralApiResponse,
@@ -5,7 +6,6 @@ import {
 } from "./url.service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-export type ClientPlan = "STARTER" | "BASIC" | "PRO";
 
 export interface IClient {
     _id: string;
@@ -15,12 +15,13 @@ export interface IClient {
     phoneNumberId: string;
 
     accessToken: string;
-    plan: ClientPlan;
+    plan: PLAN_TYPE;
 
     assistantId: string;
     automated: boolean;
 
     isActive: boolean;
+    mode?: MODE_TYPE;
 
     whatsappBusinessId: string;
     appId: string;
@@ -63,6 +64,23 @@ export const useUpdateClient = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: updateClient,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["clients"] });
+            queryClient.invalidateQueries({ queryKey: ["client"] });
+        },
+    });
+};
+
+//LA Config
+export const LAConfig = (obj: any) => {
+    console.log(obj, 'OBJ');
+    return api.post<GeneralApiResponse<any>>(`${END_POINT}/${obj?.id}/LAConfig`, obj);
+};
+
+export const useLAConfig = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: LAConfig,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["clients"] });
             queryClient.invalidateQueries({ queryKey: ["client"] });

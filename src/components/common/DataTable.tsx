@@ -23,7 +23,7 @@ import { ReactNode } from "react";
 
 export interface Column<T> {
     header: string;
-    cell: (row: T) => ReactNode;
+    cell: (row: T, index: number) => ReactNode;
     className?: string;
 }
 
@@ -36,6 +36,7 @@ interface DataTableProps<T> {
     page?: number;
     limit?: number;
     onPageChange?: (page: number) => void;
+    renderMobileItem?: (row: T, index: number) => ReactNode;
 }
 
 export function DataTable<T>({
@@ -46,6 +47,7 @@ export function DataTable<T>({
     page = 0,
     limit = 10,
     onPageChange,
+    renderMobileItem,
 }: DataTableProps<T>) {
     const totalPages = Math.ceil(total / limit);
 
@@ -67,7 +69,7 @@ export function DataTable<T>({
 
     return (
         <>
-            <div className="rounded-md border overflow-x-auto">
+            <div className="hidden md:block rounded-md border overflow-x-auto">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -85,7 +87,7 @@ export function DataTable<T>({
                                         key={colIndex}
                                         className={col.className}
                                     >
-                                        {col.cell(row)}
+                                        {col.cell(row, rowIndex)}
                                     </TableCell>
                                 ))}
                             </TableRow>
@@ -93,6 +95,12 @@ export function DataTable<T>({
                     </TableBody>
                 </Table>
             </div>
+
+            {renderMobileItem && (
+                <div className="md:hidden space-y-4">
+                    {data.map((row, i) => renderMobileItem(row, i))}
+                </div>
+            )}
 
             {/* Pagination */}
             {onPageChange && totalPages > 1 && (

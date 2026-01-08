@@ -62,7 +62,9 @@ export const useOverrideWebhook = () => {
 };
 
 export const overrideAllWebhookUrl = (obj: Partial<IOverrideClient>) => {
-    return api.post<GeneralApiResponse<IClient>>(`${END_POINT}/all`, obj);
+    return api.post<GeneralApiResponse<IClient>>(`${END_POINT}/all`, obj, {
+        timeout: 60 * 1000 * 15, // 15 minutes
+    });
 };
 
 export const useOverrideAllWebhook = () => {

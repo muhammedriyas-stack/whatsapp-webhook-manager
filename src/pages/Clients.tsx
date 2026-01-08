@@ -12,6 +12,10 @@ import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { OverrideAllDialog } from "@/components/clients/OverrideAllDialog";
+import { LAConfigDialog } from "@/components/clients/LAConfigDialog";
+import { MODE, PLAN } from "@/components/common/constant.common";
+import { capitalize } from "@/lib/utils";
+
 
 export default function Clients() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -19,6 +23,9 @@ export default function Clients() {
 
   const [overrideOpen, setOverrideOpen] = useState(false);
   const [overrideClient, setOverrideClient] = useState<IClient | null>(null);
+
+  const [LAConfigOpen, setLAConfigOpen] = useState(false);
+  const [LAConfigClient, setLAConfigClient] = useState<IClient | null>(null);
 
   const [overrideAllOpen, setOverrideAllOpen] = useState(false);
 
@@ -34,15 +41,17 @@ export default function Clients() {
   const [planFilter, setPlanFilter] = useState("");
   const [automatedFilter, setAutomatedFilter] = useState("");
   const [activeFilter, setActiveFilter] = useState("");
+  const [modeFilter, setModeFilter] = useState<any>(MODE.DEVELOPMENT_MODE);
 
   const clearFilters = () => {
     setPlanFilter("");
     setAutomatedFilter("");
     setActiveFilter("");
+    setModeFilter("")
   };
 
   // DATA
-  const { data: clientsData, isLoading, refetch } = useGetClients({ plan: planFilter, automated: automatedFilter, isActive: activeFilter, pageIndex: page, pageSize: limit, search: debouncedSearch });
+  const { data: clientsData, isLoading, refetch } = useGetClients({ plan: planFilter, automated: automatedFilter, isActive: activeFilter, mode: modeFilter, pageIndex: page, pageSize: limit, search: debouncedSearch });
   const clients = clientsData?.data;
 
 
@@ -140,6 +149,12 @@ export default function Clients() {
     }
   };
 
+  // LA CONFIG HANDLER
+  const handleLAConfig = (client: IClient) => {
+    setLAConfigClient(client);
+    setLAConfigOpen(true);
+  };
+
   // 💥 DELETE HANDLER
   const handleDelete = async (id: string) => {
     try {
@@ -194,15 +209,33 @@ export default function Clients() {
               }}
             />
 
+            {/* MODE FILTER */}
+            <Select value={modeFilter} onValueChange={setModeFilter}>
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue placeholder="Filter: Mode" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.values(MODE).map((mode) => (
+                  <SelectItem key={mode} value={mode}>
+                    {capitalize(mode?.split("_")[0])}
+                  </SelectItem>
+
+                ))}
+              </SelectContent>
+            </Select>
+
             {/* PLAN FILTER */}
             <Select value={planFilter} onValueChange={setPlanFilter}>
               <SelectTrigger className="w-full sm:w-40">
                 <SelectValue placeholder="Filter: Plan" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="STARTER">Starter</SelectItem>
-                <SelectItem value="BASIC">Basic</SelectItem>
-                <SelectItem value="PRO">Pro</SelectItem>
+                {Object.values(PLAN).map((plan) => (
+                  <SelectItem key={plan} value={plan}>
+                    {capitalize(plan)}
+                  </SelectItem>
+
+                ))}
               </SelectContent>
             </Select>
 
@@ -241,7 +274,8 @@ export default function Clients() {
           onEdit={handleEdit}
           onToggleStatus={handleToggleStatus}
           onOverride={handleOverride}
-          onDelete={handleDelete}   // 🚀 ADDED
+          onDelete={handleDelete}
+          onLAConfig={handleLAConfig}
           total={clientsData?.total}
           page={page}
           limit={limit}
@@ -260,6 +294,13 @@ export default function Clients() {
           onOpenChange={setOverrideOpen}
           client={overrideClient}
           onSubmitOverride={handleSubmitOverride}
+          loading={isPendingOverriding}
+        />
+
+        <LAConfigDialog
+          open={LAConfigOpen}
+          onOpenChange={setLAConfigOpen}
+          client={LAConfigClient}
           loading={isPendingOverriding}
         />
 

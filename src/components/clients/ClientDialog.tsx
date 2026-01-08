@@ -29,13 +29,16 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { IClient, useCreateClient, useUpdateClient } from "@/services/client.service";
 import { Loader2 } from "lucide-react";
+import { MODE, PLAN } from "../common/constant.common";
+import { capitalize } from "@/lib/utils";
 
 const clientSchema = z.object({
   displayName: z.string().min(1, "Name is required"),
   phoneNumber: z.string().min(1, "WhatsApp number is required"),
   phoneNumberId: z.string().min(1, "Phone number ID is required"),
   accessToken: z.string().min(1, "Token is required"),
-  plan: z.enum(["STARTER", "BASIC", "PRO"]),
+  plan: z.enum([PLAN.BASIC, PLAN.PRO, PLAN.STARTER]),
+  mode: z.enum([MODE.DEVELOPMENT_MODE, MODE.PRODUCTION_MODE]),
   assistantId: z.string().min(1, "Assistant ID is required"),
   automated: z.boolean().optional(),
   whatsappBusinessId: z.string().min(1, "WABA ID is required"),
@@ -64,7 +67,8 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
       phoneNumber: "",
       phoneNumberId: "",
       accessToken: "",
-      plan: "STARTER",
+      plan: PLAN.STARTER,
+      mode: MODE.DEVELOPMENT_MODE,
       assistantId: "",
       automated: false,
       whatsappBusinessId: "",
@@ -82,7 +86,8 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
         phoneNumber: client?.phoneNumber || "",
         phoneNumberId: client?.phoneNumberId || "",
         accessToken: client?.accessToken || "",
-        plan: client?.plan || "STARTER",
+        plan: client?.plan || PLAN.STARTER,
+        mode: client?.mode || MODE.DEVELOPMENT_MODE,
         assistantId: client?.assistantId || "",
         automated: typeof client?.automated === "boolean" ? client?.automated : false,
         whatsappBusinessId: client?.whatsappBusinessId || "",
@@ -97,7 +102,8 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
         phoneNumber: "",
         phoneNumberId: "",
         accessToken: "",
-        plan: "STARTER",
+        plan: PLAN.STARTER,
+        mode: MODE.DEVELOPMENT_MODE,
         assistantId: "",
         automated: false,
         whatsappBusinessId: "",
@@ -124,6 +130,7 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
           phoneNumberId: data.phoneNumberId,
           accessToken: data.accessToken,
           plan: data.plan,
+          mode: data.mode,
           assistantId: data.assistantId,
           automated: typeof data.automated === "boolean" ? data.automated : false,
           whatsappBusinessId: data.whatsappBusinessId,
@@ -144,6 +151,7 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
           phoneNumberId: data.phoneNumberId,
           accessToken: data.accessToken,
           plan: data.plan,
+          mode: data.mode,
           assistantId: data.assistantId,
           automated: typeof data.automated === "boolean" ? data.automated : false,
           whatsappBusinessId: data.whatsappBusinessId,
@@ -253,9 +261,39 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="STARTER">Starter</SelectItem>
-                        <SelectItem value="BASIC">Basic</SelectItem>
-                        <SelectItem value="PRO">Pro</SelectItem>
+                        {Object.values(PLAN).map((plan) => (
+                          <SelectItem key={plan} value={plan}>
+                            {capitalize(plan)}
+                          </SelectItem>
+
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+
+              <FormField
+                control={form.control}
+                name="mode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mode</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select mode" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.values(MODE).map((mode) => (
+                          <SelectItem key={mode} value={mode}>
+                            {capitalize(mode)}
+                          </SelectItem>
+
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
