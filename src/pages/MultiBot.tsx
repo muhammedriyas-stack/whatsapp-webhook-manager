@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { IMultibot, useDeleteMultibot, useGetMultibots, useUpdateMultibot } from "@/services/multibot.service";
 import { MultibotsTable } from "@/components/multibots/MultibotTable";
 import { MultibotDialog } from "@/components/multibots/MultibotDialog";
+import { PLAN } from "@/components/common/constant.common";
+import { capitalize } from "@/lib/utils";
 
 export default function MultiBot() {
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -25,16 +27,16 @@ export default function MultiBot() {
     // ⬅️ NEW — FILTER STATES
     const [planFilter, setPlanFilter] = useState("");
     const [activeFilter, setActiveFilter] = useState("");
-    // const [botTypeFilter, setBotTypeFilter] = useState("");
+    const [botTypeFilter, setBotTypeFilter] = useState("");
 
     const clearFilters = () => {
         setPlanFilter("");
         setActiveFilter("");
-        // setBotTypeFilter("");
+        setBotTypeFilter("");
     };
 
     // DATA
-    const { data: clientsData, isLoading, refetch } = useGetMultibots({ plan: planFilter, isActive: activeFilter, pageIndex: page, pageSize: limit, search: debouncedSearch });
+    const { data: clientsData, isLoading, refetch } = useGetMultibots({ plan: planFilter, isActive: activeFilter, pageIndex: page, pageSize: limit, search: debouncedSearch, botType: botTypeFilter });
     const clients = clientsData?.data;
 
 
@@ -127,9 +129,12 @@ export default function MultiBot() {
                                 <SelectValue placeholder="Filter: Plan" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="STARTER">Starter</SelectItem>
-                                <SelectItem value="BASIC">Basic</SelectItem>
-                                <SelectItem value="PRO">Pro</SelectItem>
+                                {Object.values(PLAN).map((plan) => (
+                                    <SelectItem key={plan} value={plan}>
+                                        {capitalize(plan)}
+                                    </SelectItem>
+
+                                ))}
                             </SelectContent>
                         </Select>
 
@@ -145,7 +150,7 @@ export default function MultiBot() {
                         </Select>
 
                         {/* BOT TYPE FILTER */}
-                        {/*     <Select value={botTypeFilter} onValueChange={setBotTypeFilter}>
+                        <Select value={botTypeFilter} onValueChange={setBotTypeFilter}>
                             <SelectTrigger className="w-full sm:w-40">
                                 <SelectValue placeholder="Filter: Bot Type" />
                             </SelectTrigger>
@@ -153,7 +158,7 @@ export default function MultiBot() {
                                 <SelectItem value="DEMO">Demo</SelectItem>
                                 <SelectItem value="MULTIBOT">MultiBot</SelectItem>
                             </SelectContent>
-                        </Select>*/}
+                        </Select>
 
                         {/* CLEAR FILTERS */}
                         <Button variant="outline" onClick={clearFilters} className="w-full sm:w-auto">

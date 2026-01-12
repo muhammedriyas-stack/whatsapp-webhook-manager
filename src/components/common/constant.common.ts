@@ -12,3 +12,10 @@ export const PLAN = {
 } as const;
 
 export type PLAN_TYPE = keyof typeof PLAN;
+
+export const BOT_TYPE = {
+    DEMO: "DEMO",
+    MULTIBOT: "MULTIBOT",
+} as const;
+
+export type BOT_TYPE_TYPE = keyof typeof BOT_TYPE;

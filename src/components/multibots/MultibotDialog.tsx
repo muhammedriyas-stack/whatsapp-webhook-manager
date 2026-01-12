@@ -29,6 +29,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { IMultibot, useCreateMultibot, useUpdateMultibot } from "@/services/multibot.service";
+import { BOT_TYPE, PLAN } from "../common/constant.common";
+import { capitalize } from "@/lib/utils";
 
 const multibotSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -36,7 +38,7 @@ const multibotSchema = z.object({
   apiUrl: z.string().min(1, "API URL is required"),
   plan: z.enum(["STARTER", "BASIC", "PRO"]),
   isActive: z.boolean().optional(),
-  // botType: z.enum(["DEMO", "MULTIBOT"]),
+  botType: z.enum([BOT_TYPE.DEMO, BOT_TYPE.MULTIBOT]),
 });
 
 type MultibotFormData = z.infer<typeof multibotSchema>;
@@ -57,9 +59,9 @@ export function MultibotDialog({ open, loading, onOpenChange, multibot }: Multib
       name: "",
       assistant_id: "",
       apiUrl: "",
-      plan: "STARTER",
+      plan: PLAN.STARTER,
       isActive: false,
-      // botType: "MULTIBOT",
+      botType: BOT_TYPE.MULTIBOT,
     },
   });
 
@@ -69,18 +71,18 @@ export function MultibotDialog({ open, loading, onOpenChange, multibot }: Multib
         name: multibot?.name || "",
         assistant_id: multibot?.assistant_id || "",
         apiUrl: multibot?.apiUrl || "",
-        plan: multibot?.plan || "STARTER",
+        plan: multibot?.plan || PLAN.STARTER,
         isActive: multibot?.isActive || false,
-        // botType: multibot?.botType || "MULTIBOT",
+        botType: multibot?.botType || BOT_TYPE.MULTIBOT,
       });
     } else {
       form.reset({
         name: "",
         assistant_id: "",
         apiUrl: "",
-        plan: "STARTER",
+        plan: PLAN.STARTER,
         isActive: false,
-        // botType: "MULTIBOT",
+        botType: BOT_TYPE.MULTIBOT,
       });
     }
   }, [multibot, form, loading]);
@@ -91,18 +93,18 @@ export function MultibotDialog({ open, loading, onOpenChange, multibot }: Multib
         name: multibot?.name || "",
         assistant_id: multibot?.assistant_id || "",
         apiUrl: multibot?.apiUrl || "",
-        plan: multibot?.plan || "STARTER",
+        plan: multibot?.plan || PLAN.STARTER,
         isActive: multibot?.isActive || false,
-        // botType: multibot?.botType || "MULTIBOT",
+        botType: multibot?.botType || BOT_TYPE.MULTIBOT,
       });
     } else {
       form.reset({
         name: "",
         assistant_id: "",
         apiUrl: "https://voice.kiksy.live/get_text",
-        plan: "STARTER",
+        plan: PLAN.STARTER,
         isActive: false,
-        // botType: "MULTIBOT",
+        botType: BOT_TYPE.MULTIBOT,
       });
     }
   }, [multibot, form, loading]);
@@ -121,7 +123,7 @@ export function MultibotDialog({ open, loading, onOpenChange, multibot }: Multib
           apiUrl: data.apiUrl,
           plan: data.plan,
           isActive: data.isActive,
-          // botType: data.botType,
+          botType: data.botType,
         });
 
         toast({
@@ -135,7 +137,7 @@ export function MultibotDialog({ open, loading, onOpenChange, multibot }: Multib
           apiUrl: data.apiUrl,
           plan: data.plan,
           isActive: data.isActive,
-          // botType: data.botType,
+          botType: data.botType,
         });
 
         toast({
@@ -183,7 +185,7 @@ export function MultibotDialog({ open, loading, onOpenChange, multibot }: Multib
                 )}
               />
 
-              {/* <FormField
+              <FormField
                 control={form.control}
                 name="botType"
                 render={({ field }) => (
@@ -206,7 +208,7 @@ export function MultibotDialog({ open, loading, onOpenChange, multibot }: Multib
                     <FormMessage />
                   </FormItem>
                 )}
-              /> */}
+              />
               <FormField
                 control={form.control}
                 name="assistant_id"
@@ -250,9 +252,12 @@ export function MultibotDialog({ open, loading, onOpenChange, multibot }: Multib
                           <SelectValue placeholder="Select a plan" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="STARTER">STARTER</SelectItem>
-                          <SelectItem value="BASIC">BASIC</SelectItem>
-                          <SelectItem value="PRO">PRO</SelectItem>
+                          {Object.values(PLAN).map((plan) => (
+                            <SelectItem key={plan} value={plan}>
+                              {capitalize(plan)}
+                            </SelectItem>
+
+                          ))}
                         </SelectContent>
                       </Select>
                     </FormControl>
