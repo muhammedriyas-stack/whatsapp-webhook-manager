@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, Trash2 } from "lucide-react";
+import { FlaskConical, Globe, MoreHorizontal, Trash2 } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -16,6 +16,8 @@ import {
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Column, DataTable } from "../common/DataTable";
 import { IMultibot } from "@/services/multibot.service";
+import { capitalize, cn } from "@/lib/utils";
+import { BOT_TYPE } from "../common/constant.common";
 
 interface MultibotsTableProps {
   multibots: IMultibot[];
@@ -45,17 +47,35 @@ export function MultibotsTable({
   // TABLE COLUMNS
   const columns: Column<IMultibot>[] = [
     {
-      header: "Name",
-      cell: (c) => c.name,
+      header: "S.No",
+      cell: (_, i) => (page * limit) + i + 1,
     },
-    // {
-    //   header: "Bot Type",
-    //   cell: (c) => (
-    //     <Badge variant={c.botType === "DEMO" ? "default" : "outline"}>
-    //       {c.botType}
-    //     </Badge>
-    //   ),
-    // },
+    {
+      header: "Name",
+      cell: (c) => (
+        <div className="flex flex-col gap-1">
+          <span className="font-medium">{c.name}</span>
+          {c.botType && (
+            <Badge
+              className={cn(
+                "w-fit text-[10px] md:text-xs px-2 py-0.5 flex items-center gap-1.5 font-semibold transition-all duration-300",
+                c.botType === BOT_TYPE.MULTIBOT
+                  ? "bg-emerald-500/15 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/25"
+                  : "bg-cyan-500/15 text-cyan-500 border-cyan-500/20 hover:bg-cyan-500/25"
+              )}
+              variant="outline"
+            >
+              {c.botType === BOT_TYPE.MULTIBOT ? (
+                <Globe className="w-3 h-3 animate-pulse" />
+              ) : (
+                <FlaskConical className="w-3 h-3" />
+              )}
+              {capitalize(c.botType)}
+            </Badge>
+          )}
+        </div>
+      ),
+    },
     {
       header: "Assistant ID",
       cell: (c) => c.assistant_id,

@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { IMultibot, useDeleteMultibot, useGetMultibots, useUpdateMultibot } from "@/services/multibot.service";
 import { MultibotsTable } from "@/components/multibots/MultibotTable";
 import { MultibotDialog } from "@/components/multibots/MultibotDialog";
-import { PLAN } from "@/components/common/constant.common";
+import { BOT_TYPE, PLAN } from "@/components/common/constant.common";
 import { capitalize } from "@/lib/utils";
 
 export default function MultiBot() {
@@ -27,7 +27,7 @@ export default function MultiBot() {
     // ⬅️ NEW — FILTER STATES
     const [planFilter, setPlanFilter] = useState("");
     const [activeFilter, setActiveFilter] = useState("");
-    const [botTypeFilter, setBotTypeFilter] = useState("");
+    const [botTypeFilter, setBotTypeFilter] = useState<any>(BOT_TYPE.MULTIBOT);
 
     const clearFilters = () => {
         setPlanFilter("");
