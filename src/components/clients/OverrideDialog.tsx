@@ -72,9 +72,9 @@ export function OverrideDialog({
         if (!client) return;
 
         if (environment === "PRODUCTION") {
-            form.setValue("url", client.webhookUrlProd || "");
+            form.setValue("url", client.webhookUrlProd || "https://api.kiksy.live/common_webhook/v1/webhook");
         } else {
-            form.setValue("url", client.webhookUrlDev || "");
+            form.setValue("url", client.webhookUrlDev || "https://tgfqpbjd-3002.inc1.devtunnels.ms/webhook");
         }
     }, [environment, client, form]);
 

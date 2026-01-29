@@ -26,7 +26,6 @@ interface ClientsTableProps {
   clients: IClient[];
   loading: boolean;
   onEdit: (client: IClient) => void;
-  onToggleStatus: (id: string, currentStatus: boolean) => Promise<void>;
   onOverride: (client: IClient) => void;
   onLAConfig: (client: IClient) => void;
   onDelete: (id: string) => Promise<void>;
@@ -44,7 +43,6 @@ export function ClientsTable({
   limit,
   onPageChange,
   onEdit,
-  onToggleStatus,
   onOverride,
   onLAConfig,
   onDelete,
@@ -108,23 +106,20 @@ export function ClientsTable({
 
       ),
     },
-    // {
-    //   header: "Automated",
-    //   cell: (c) => (
-    //     <Badge variant={c.automated ? "default" : "secondary"}>
-    //       {c.automated ? "Yes" : "No"}
-    //     </Badge>
-    //   ),
-    // },
+    {
+      header: "Bot",
+      cell: (c) => (
+        <Badge variant={c.botEnabled ? "default" : "secondary"}>
+          {c.botEnabled ? "Enabled" : "Disabled"}
+        </Badge>
+      ),
+    },
     {
       header: "Status",
       cell: (c) => (
-        <Switch
-          checked={c.isActive}
-          onCheckedChange={() =>
-            handleStatusChangeClick(c)
-          }
-        />
+        <Badge variant={c.isActive ? "default" : "secondary"}>
+          {c.isActive ? "Active" : "Inactive"}
+        </Badge>
       ),
     },
     {
@@ -164,18 +159,11 @@ export function ClientsTable({
   const totalPages = Math.ceil(total / limit);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [confirmStatusChangeOpen, setConfirmStatusChangeOpen] = useState(false);
-
   const [selectedClient, setSelectedClient] = useState<IClient | null>(null);
 
   const handleDeleteClick = (client: IClient) => {
     setSelectedClient(client);
     setConfirmOpen(true);
-  };
-
-  const handleStatusChangeClick = (client: IClient) => {
-    setSelectedClient(client);
-    setConfirmStatusChangeOpen(true);
   };
 
   const handleConfirmDelete = async () => {
@@ -187,22 +175,8 @@ export function ClientsTable({
     setSelectedClient(null);
   };
 
-  const handleConfirmStatusChange = async () => {
-    if (!selectedClient) return;
-
-    await onToggleStatus(selectedClient._id, selectedClient.isActive);
-
-    setConfirmStatusChangeOpen(false);
-    setSelectedClient(null);
-  };
-
   const handleCancel = () => {
     setConfirmOpen(false);
-    setSelectedClient(null);
-  };
-
-  const handleCancelStatusChange = () => {
-    setConfirmStatusChangeOpen(false);
     setSelectedClient(null);
   };
 
@@ -311,10 +285,9 @@ export function ClientsTable({
 
                     <div className="pt-2 border-t flex items-center justify-between">
                       <span className="text-muted-foreground uppercase tracking-wider font-semibold opacity-70">Status</span>
-                      <Switch
-                        checked={c.isActive}
-                        onCheckedChange={() => handleStatusChangeClick(c)}
-                      />
+                      <Badge variant={c.isActive ? "default" : "secondary"} className="text-[10px] px-1.5 h-4">
+                        {c.isActive ? "Active" : "Inactive"}
+                      </Badge>
                     </div>
                   </div>
                 </CardContent>
@@ -337,20 +310,6 @@ export function ClientsTable({
             : "Are you sure you want to delete this client?"
         }
         confirmText="Delete"
-        cancelText="Cancel"
-      />
-      <ConfirmDialog
-        open={confirmStatusChangeOpen}
-        onCancel={handleCancelStatusChange}
-        onConfirm={handleConfirmStatusChange}
-        destructive
-        title="Change Client Status?"
-        description={
-          selectedClient
-            ? `Are you sure you want to change the status of "${selectedClient.displayName}"?`
-            : "Are you sure you want to change the status of this client?"
-        }
-        confirmText="Change Status"
         cancelText="Cancel"
       />
     </>

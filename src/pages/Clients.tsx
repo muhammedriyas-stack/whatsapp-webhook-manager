@@ -42,16 +42,27 @@ export default function Clients() {
   const [automatedFilter, setAutomatedFilter] = useState("");
   const [activeFilter, setActiveFilter] = useState("");
   const [modeFilter, setModeFilter] = useState<any>(MODE.DEVELOPMENT_MODE);
+  const [botEnabledFilter, setBotEnabledFilter] = useState("");
 
   const clearFilters = () => {
     setPlanFilter("");
     setAutomatedFilter("");
     setActiveFilter("");
     setModeFilter("")
+    setBotEnabledFilter("");
   };
 
   // DATA
-  const { data: clientsData, isLoading, refetch } = useGetClients({ plan: planFilter, automated: automatedFilter, isActive: activeFilter, mode: modeFilter, pageIndex: page, pageSize: limit, search: debouncedSearch });
+  const { data: clientsData, isLoading, refetch } = useGetClients({
+    plan: planFilter,
+    automated: automatedFilter,
+    isActive: activeFilter,
+    mode: modeFilter,
+    botEnabled: botEnabledFilter,
+    pageIndex: page,
+    pageSize: limit,
+    search: debouncedSearch
+  });
   const clients = clientsData?.data;
 
 
@@ -76,24 +87,6 @@ export default function Clients() {
   // OVERRIDE ALL HANDLER
   const handleOverrideAll = () => {
     setOverrideAllOpen(true);
-  };
-
-  // STATUS TOGGLE
-  const handleToggleStatus = async (id: string, currentStatus: boolean) => {
-    try {
-      await updateClient({ _id: id, isActive: !currentStatus });
-      toast({
-        title: "Success",
-        description: "Client status updated successfully",
-      });
-      refetch();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error?.response?.data?.message || error?.message,
-        variant: "destructive",
-      });
-    }
   };
 
   // OVERRIDE HANDLER
@@ -261,6 +254,17 @@ export default function Clients() {
               </SelectContent>
             </Select>
 
+            {/* BOT ENABLED FILTER */}
+            <Select value={botEnabledFilter} onValueChange={setBotEnabledFilter}>
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue placeholder="Bot Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="true">Bot Enabled</SelectItem>
+                <SelectItem value="false">Bot Disabled</SelectItem>
+              </SelectContent>
+            </Select>
+
             {/* CLEAR FILTERS */}
             <Button variant="outline" onClick={clearFilters} className="w-full sm:w-auto">
               Clear Filters
@@ -272,7 +276,6 @@ export default function Clients() {
           clients={clients}
           loading={isLoading}
           onEdit={handleEdit}
-          onToggleStatus={handleToggleStatus}
           onOverride={handleOverride}
           onDelete={handleDelete}
           onLAConfig={handleLAConfig}

@@ -46,6 +46,8 @@ const clientSchema = z.object({
   secretKey: z.string().optional(),
   webhookUrlProd: z.string(),
   webhookUrlDev: z.string(),
+  botEnabled: z.boolean().optional(),
+  isActive: z.boolean().optional(),
 });
 
 type ClientFormData = z.infer<typeof clientSchema>;
@@ -75,7 +77,9 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
       appId: "",
       secretKey: "",
       webhookUrlProd: "",
-      webhookUrlDev: ""
+      webhookUrlDev: "",
+      botEnabled: true,
+      isActive: true,
     },
   });
 
@@ -95,6 +99,8 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
         secretKey: client?.secretKey || "",
         webhookUrlProd: client?.webhookUrlProd || "",
         webhookUrlDev: client?.webhookUrlDev || "",
+        botEnabled: typeof client?.botEnabled === "boolean" ? client?.botEnabled : true,
+        isActive: typeof client?.isActive === "boolean" ? client?.isActive : true,
       });
     } else {
       form.reset({
@@ -110,7 +116,9 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
         appId: "",
         secretKey: "",
         webhookUrlProd: "",
-        webhookUrlDev: ""
+        webhookUrlDev: "",
+        botEnabled: true,
+        isActive: true,
       });
     }
   }, [client, form, loading]);
@@ -138,6 +146,8 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
           secretKey: data.secretKey,
           webhookUrlProd: data.webhookUrlProd,
           webhookUrlDev: data.webhookUrlDev,
+          botEnabled: typeof data.botEnabled === "boolean" ? data.botEnabled : true,
+          isActive: typeof data.isActive === "boolean" ? data.isActive : true,
         });
 
         toast({
@@ -159,6 +169,8 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
           secretKey: data.secretKey,
           webhookUrlProd: data.webhookUrlProd,
           webhookUrlDev: data.webhookUrlDev,
+          botEnabled: typeof data.botEnabled === "boolean" ? data.botEnabled : true,
+          isActive: typeof data.isActive === "boolean" ? data.isActive : true,
         });
 
         toast({
@@ -364,6 +376,44 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
                     <div className="space-y-0.5">
                       <FormLabel>Automated</FormLabel>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="botEnabled"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>Bot Enabled</FormLabel>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="isActive"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>Active Status</FormLabel>
                     </div>
                     <FormControl>
                       <Switch

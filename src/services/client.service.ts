@@ -30,6 +30,8 @@ export interface IClient {
     webhookUrlProd: string;
     webhookUrlDev: string;
 
+    botEnabled: boolean;
+
     createdAt: Date;
     updatedAt: Date;
 }
