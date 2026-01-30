@@ -32,6 +32,8 @@ export interface IClient {
 
     botEnabled: boolean;
 
+    apiUrl?: string;
+
     createdAt: Date;
     updatedAt: Date;
 }

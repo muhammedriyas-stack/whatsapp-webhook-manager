@@ -48,6 +48,7 @@ const clientSchema = z.object({
   webhookUrlDev: z.string(),
   botEnabled: z.boolean().optional(),
   isActive: z.boolean().optional(),
+  apiUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
 });
 
 type ClientFormData = z.infer<typeof clientSchema>;
@@ -80,6 +81,7 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
       webhookUrlDev: "",
       botEnabled: true,
       isActive: true,
+      apiUrl: "",
     },
   });
 
@@ -101,6 +103,7 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
         webhookUrlDev: client?.webhookUrlDev || "",
         botEnabled: typeof client?.botEnabled === "boolean" ? client?.botEnabled : true,
         isActive: typeof client?.isActive === "boolean" ? client?.isActive : true,
+        apiUrl: client?.apiUrl || "",
       });
     } else {
       form.reset({
@@ -119,6 +122,7 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
         webhookUrlDev: "",
         botEnabled: true,
         isActive: true,
+        apiUrl: "",
       });
     }
   }, [client, form, loading]);
@@ -148,6 +152,7 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
           webhookUrlDev: data.webhookUrlDev,
           botEnabled: typeof data.botEnabled === "boolean" ? data.botEnabled : true,
           isActive: typeof data.isActive === "boolean" ? data.isActive : true,
+          apiUrl: data.apiUrl,
         });
 
         toast({
@@ -171,6 +176,7 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
           webhookUrlDev: data.webhookUrlDev,
           botEnabled: typeof data.botEnabled === "boolean" ? data.botEnabled : true,
           isActive: typeof data.isActive === "boolean" ? data.isActive : true,
+          apiUrl: data.apiUrl,
         });
 
         toast({
@@ -336,6 +342,26 @@ export function ClientDialog({ open, loading, onOpenChange, client }: ClientDial
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="apiUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>AI Service API URL (Optional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Leave empty to use default system AI service"
+                        {...field}
+                      />
+                    </FormControl>
+                    <p className="text-[0.8rem] font-medium text-destructive">
+                      ⚠️ Changing this affects how AI responses are generated for this client
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
