@@ -96,9 +96,10 @@ export default function MultiBot() {
 
     return (
         <DashboardLayout>
-            <div className="space-y-6">
+            {/* Mobile: whole section scrollable | Desktop: fixed header + scrollable table */}
+            <div className="space-y-6 md:flex md:flex-col md:h-[calc(100vh-7rem)] md:overflow-hidden">
                 {/* HEADER + SEARCH + FILTERS */}
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-4 md:flex-shrink-0 md:space-y-4 md:pb-4">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
                             <h2 className="text-3xl font-bold">Multi Bots</h2>
@@ -167,17 +168,20 @@ export default function MultiBot() {
                     </div>
                 </div>
 
-                <MultibotsTable
-                    multibots={clients}
-                    loading={isLoading}
-                    onEdit={handleEdit}
-                    onToggleStatus={handleToggleStatus}
-                    onDelete={handleDelete}   // 🚀 ADDED
-                    total={clientsData?.total}
-                    page={page}
-                    limit={limit}
-                    onPageChange={(newPage) => setPage(newPage)}
-                />
+                {/* TABLE SECTION */}
+                <div className="md:flex-1 md:overflow-auto">
+                    <MultibotsTable
+                        multibots={clients}
+                        loading={isLoading}
+                        onEdit={handleEdit}
+                        onToggleStatus={handleToggleStatus}
+                        onDelete={handleDelete}   // 🚀 ADDED
+                        total={clientsData?.total}
+                        page={page}
+                        limit={limit}
+                        onPageChange={(newPage) => setPage(newPage)}
+                    />
+                </div>
 
                 <MultibotDialog
                     open={dialogOpen}

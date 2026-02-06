@@ -52,6 +52,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem("user_token", res?.data?.accessToken);
       setUser(res?.data?.user);
       setLoading(false);
+      // No forced navigate here if we want to land on the current page or a safe default
       navigate("/");
     }
 

@@ -1,4 +1,4 @@
-import { BarChart3, Users, Settings, Bot } from "lucide-react";
+import { BarChart3, Users, Settings, Bot, Workflow, UserCog } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -12,20 +12,42 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useGetProfile } from "@/services/auth.service";
+import { useMemo } from "react";
 
-const items = [
-  { title: "Analytics", url: "/", icon: BarChart3 },
-  { title: "Clients", url: "/clients", icon: Users },
-  { title: "MultiBot", url: "/multibot", icon: Bot },
-  { title: "Settings", url: "/settings", icon: Settings },
-];
+import { ROLES, PERMISSIONS } from "@/constants/common";
 
 export function AppSidebar() {
   const { open } = useSidebar();
   const location = useLocation();
+  const { data: user } = useGetProfile();
 
-  const isActive = (path: string) => location.pathname === path;
-  const isExpanded = items.some((i) => isActive(i.url));
+  const items = useMemo(() => {
+    const allItems = [
+      { title: "Analytics", url: "/", icon: BarChart3, permission: PERMISSIONS.ANALYTICS },
+      { title: "Clients", url: "/clients", icon: Users, permission: PERMISSIONS.MANAGE_CLIENTS },
+      { title: "MultiBot", url: "/multibot", icon: Bot, permission: PERMISSIONS.MANAGE_MULTIBOT },
+      // {
+      //   title: "Flow Builder",
+      //   url: "/flow-builder",
+      //   icon: Workflow,
+      //   permission: PERMISSIONS.FLOW_BUILDER
+      // },
+      {
+        title: "Users",
+        url: "/users",
+        icon: UserCog,
+        permission: PERMISSIONS.MANAGE_USERS
+      },
+      // { title: "Settings", url: "/settings", icon: Settings, permission: PERMISSIONS.MANAGE_SETTINGS },
+    ];
+
+    return allItems.filter(item => {
+      if (!item.permission) return true; // Public items
+      if (user?.role === ROLES.ADMIN) return true; // Admin sees everything
+      return user?.permissions?.includes(item.permission);
+    });
+  }, [user]);
 
   return (
     <Sidebar className={open ? "w-60" : "w-14"} collapsible="icon">

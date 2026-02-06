@@ -199,6 +199,79 @@ export function MultibotsTable({
             page={page}
             limit={limit}
             onPageChange={onPageChange}
+            renderMobileItem={(c, i) => (
+              <div key={c._id} className="mb-4 rounded-lg border border-border bg-card p-4">
+                <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <div className="flex flex-col gap-1">
+                    <div className="text-sm font-medium">
+                      <span className="text-muted-foreground mr-2">#{(page * limit) + i + 1}</span>
+                      {c.name}
+                    </div>
+                    {c.botType && (
+                      <Badge
+                        className={cn(
+                          "w-fit text-[10px] px-2 py-0.5 flex items-center gap-1 font-semibold",
+                          c.botType === BOT_TYPE.MULTIBOT
+                            ? "bg-emerald-500/15 text-emerald-500 border-emerald-500/20"
+                            : "bg-cyan-500/15 text-cyan-500 border-cyan-500/20"
+                        )}
+                        variant="outline"
+                      >
+                        {c.botType === BOT_TYPE.MULTIBOT ? (
+                          <Globe className="w-2.5 h-2.5" />
+                        ) : (
+                          <FlaskConical className="w-2.5 h-2.5" />
+                        )}
+                        {capitalize(c.botType)}
+                      </Badge>
+                    )}
+                  </div>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="icon" variant="ghost" className="h-8 w-8">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => onEdit(c)}>
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-red-600"
+                        onClick={() => handleDeleteClick(c)}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                <div className="text-xs space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <p className="text-muted-foreground mb-1 uppercase tracking-wider font-semibold opacity-70">Assistant ID</p>
+                      <p className="font-medium">{c.assistant_id}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-muted-foreground mb-1 uppercase tracking-wider font-semibold opacity-70">Plan</p>
+                      <Badge variant={c.plan === "PRO" ? "default" : "secondary"} className="text-[10px] px-1.5 h-4">
+                        {c.plan}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t flex items-center justify-between">
+                    <span className="text-muted-foreground uppercase tracking-wider font-semibold opacity-70">Status</span>
+                    <Switch
+                      checked={c.isActive}
+                      onCheckedChange={() => handleStatusChangeClick(c)}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           />
         }
       </div>

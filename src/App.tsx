@@ -13,6 +13,10 @@ import Clients from "./pages/Clients";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import MultiBot from "./pages/MultiBot";
+import FlowBuilderPro from "./pages/FlowBuilderPro";
+import Users from "./pages/Users";
+import { PermissionRoute } from "./components/PermissionRoute";
+import { PERMISSIONS } from "@/constants/common";
 
 const queryClient = new QueryClient();
 
@@ -30,35 +34,59 @@ const App = () => (
               <Route
                 path="/"
                 element={
-                  <ProtectedRoute>
+                  <PermissionRoute permission={PERMISSIONS.ANALYTICS}>
                     <Analytics />
-                  </ProtectedRoute>
+                  </PermissionRoute>
                 }
               />
               <Route
                 path="/clients"
                 element={
-                  <ProtectedRoute>
+                  <PermissionRoute permission={PERMISSIONS.MANAGE_CLIENTS}>
                     <Clients />
-                  </ProtectedRoute>
+                  </PermissionRoute>
                 }
               />
               <Route
                 path="/multibot"
                 element={
-                  <ProtectedRoute>
+                  <PermissionRoute permission={PERMISSIONS.MANAGE_MULTIBOT}>
                     <MultiBot />
-                  </ProtectedRoute>
+                  </PermissionRoute>
                 }
               />
               <Route
+                path="/flow-builder"
+                element={
+                  <PermissionRoute permission={PERMISSIONS.FLOW_BUILDER}>
+                    <FlowBuilderPro />
+                  </PermissionRoute>
+                }
+              />
+              <Route
+                path="/flow-builder/:id"
+                element={
+                  <PermissionRoute permission={PERMISSIONS.FLOW_BUILDER}>
+                    <FlowBuilderPro />
+                  </PermissionRoute>
+                }
+              />
+              <Route
+                path="/users"
+                element={
+                  <PermissionRoute permission={PERMISSIONS.MANAGE_USERS}>
+                    <Users />
+                  </PermissionRoute>
+                }
+              />
+              {/* <Route
                 path="/settings"
                 element={
                   <ProtectedRoute>
                     <Settings />
                   </ProtectedRoute>
                 }
-              />
+              /> */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </TooltipProvider>

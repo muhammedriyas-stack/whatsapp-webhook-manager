@@ -129,4 +129,55 @@ All colors MUST be HSL.
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--muted-foreground) / 0.2) transparent;
   }
+
+  .canvas-grid {
+    background-image:
+      linear-gradient(hsl(var(--muted-foreground) / 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--muted-foreground) / 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  .flow-node {
+    @apply bg-card rounded-lg border border-border shadow-lg transition-all duration-200;
+  }
+
+  .flow-node:hover {
+    @apply border-primary/50;
+  }
+
+  .flow-node.selected {
+    @apply border-primary ring-2 ring-primary/30;
+  }
+
+  .element-card {
+    @apply bg-sidebar-accent/50 hover:bg-sidebar-accent border border-transparent hover:border-sidebar-border rounded-lg p-3 cursor-grab transition-all duration-200;
+  }
+
+  .element-card:active {
+    @apply cursor-grabbing scale-95;
+  }
+
+  .panel-header {
+    @apply px-4 py-3 border-b border-sidebar-border font-semibold text-sm text-foreground uppercase tracking-wider flex items-center justify-between;
+  }
+
+  .json-preview {
+    @apply font-mono text-xs leading-relaxed;
+  }
+
+  .json-key {
+    @apply text-primary;
+  }
+
+  .json-string {
+    @apply text-amber-500 dark:text-amber-400;
+  }
+
+  .json-number {
+    @apply text-cyan-600 dark:text-cyan-400;
+  }
+
+  .json-boolean {
+    @apply text-purple-600 dark:text-purple-400;
+  }
 }
