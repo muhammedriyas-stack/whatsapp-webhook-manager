@@ -630,7 +630,8 @@ function renderElementProperties(
                 </div>
                 <div className="space-y-3 max-h-64 overflow-auto pr-1">
                   {options.map((opt: any, idx: number) => (
-                    <div key={opt.uid || opt.id} className="space-y-2 p-2 border border-sidebar-border rounded-md bg-sidebar-accent/30 relative group">
+                    <div key={opt.uid || opt.id || idx} className="space-y-2 p-2 border border-sidebar-border rounded-md bg-sidebar-accent/30 relative group overflow-visible">
+
                       <Button
                         size="icon"
                         variant="ghost"
@@ -640,7 +641,7 @@ function renderElementProperties(
                           updateProperty('data-source', newOptions);
                         }}
                       >
-                        <X className="w-3 h-3" />
+                        <X className="w-3 h-3 z-50" />
                       </Button>
                       <Input
                         value={opt.id}
@@ -935,7 +936,8 @@ function renderElementProperties(
                 </div>
                 <div className="space-y-3 max-h-64 overflow-auto pr-1">
                   {navOptions.map((opt: any, idx: number) => (
-                    <div key={opt.uid || opt.id} className="space-y-2 p-2 border border-sidebar-border rounded-md bg-sidebar-accent/30 relative group">
+                    <div key={opt.uid || opt.id || idx} className="space-y-2 p-2 border border-sidebar-border rounded-md bg-sidebar-accent/30 relative group">
+
                       <Button
                         size="icon"
                         variant="ghost"

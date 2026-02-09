@@ -33,12 +33,14 @@ export interface FlowElement {
 }
 
 export interface FlowScreen {
+  uid?: string; // Internal stable ID for focus management
   id: string;
   title: string;
   elements: FlowElement[];
   terminal?: boolean;
   data?: Record<string, { type: string; __example__: any }>;
 }
+
 
 export interface WhatsAppFlowScreen {
   id: string;

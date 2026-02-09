@@ -10,6 +10,7 @@ import { JsonEditor } from './JsonEditor';
 import { SaveFlowDialog } from './SaveFlowDialog';
 import { FlowScreen, FlowElement, FlowElementType, FlowData, Client } from '@/types/flow';
 import { toast } from 'sonner';
+import { Workflow } from 'lucide-react';
 import { useGetClients } from '@/services/client.service';
 import { useCreateFlow, useUpdateFlow, useGetFlowById } from '@/services/flow.service';
 
@@ -289,6 +290,7 @@ const convertFromApiFormat = (data: FlowData): FlowScreen[] => {
     }
 
     return {
+      uid: generateId(),
       id: apiScreen.id,
       title: apiScreen.title,
       terminal: apiScreen.terminal,
@@ -298,16 +300,20 @@ const convertFromApiFormat = (data: FlowData): FlowScreen[] => {
   });
 };
 
+
+
 export function FlowBuilder() {
   const { id: flowId } = useParams();
   const navigate = useNavigate();
 
   const [flowName, setFlowName] = useState('Untitled Flow');
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
+  const initialScreenUid = generateId();
   const [screens, setScreens] = useState<FlowScreen[]>([
-    { id: 'screen_1', title: 'Welcome', elements: [] }
+    { uid: initialScreenUid, id: 'screen_1', title: 'Welcome', elements: [] }
   ]);
-  const [selectedScreen, setSelectedScreen] = useState<string>('screen_1');
+  const [selectedScreen, setSelectedScreen] = useState<string>(initialScreenUid);
+
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [jsonCollapsed, setJsonCollapsed] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
@@ -334,16 +340,47 @@ export function FlowBuilder() {
   // Load existing flow data
   useEffect(() => {
     if (existingFlow?.data) {
-      const { name, data, clientId } = existingFlow.data;
+      const { name, data, builder_state, clientId } = existingFlow.data;
       setFlowName(name);
-      setScreens(data.screens || []);
-      setSelectedClient(typeof clientId === 'object' ? clientId._id : clientId);
 
-      if (data.screens?.length > 0) {
-        setSelectedScreen(data.screens[0].id);
+      // 1. Identify raw screens: prioritize builder_state (internal Representation)
+      // otherwise fall back to converting the Meta JSON (Legacy flows)
+      const rawScreens = builder_state && Array.isArray(builder_state) && builder_state.length > 0
+        ? builder_state
+        : convertFromApiFormat(data);
+
+      // 2. Ensure all loaded screens have uids (and nested uids for options)
+      const screensWithUids = rawScreens.map((s: FlowScreen) => ({
+        ...s,
+        uid: s.uid || generateId(),
+        // Also ensure options have uids
+        elements: s.elements.map(el => {
+          if (['RadioButtonsGroup', 'Dropdown', 'CheckboxGroup', 'NavigationList'].includes(el.type)) {
+            const ds = el.properties['data-source'];
+            if (Array.isArray(ds)) {
+              return {
+                ...el,
+                properties: {
+                  ...el.properties,
+                  'data-source': ds.map((opt: any) => ({
+                    ...opt,
+                    uid: opt.uid || generateId()
+                  }))
+                }
+              };
+            }
+          }
+          return el;
+        })
+      }));
+
+      setScreens(screensWithUids);
+      if (screensWithUids.length > 0) {
+        setSelectedScreen(screensWithUids[0].uid || initialScreenUid);
       }
+      setSelectedClient(clientId?._id || clientId);
     }
-  }, [existingFlow]);
+  }, [existingFlow, initialScreenUid]);
 
   // Save Dialog State
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
@@ -352,33 +389,38 @@ export function FlowBuilder() {
   const flowData: FlowData = convertToApiFormat(screens);
 
   const handleAddScreen = useCallback(() => {
+    const newUid = generateId();
     const newScreen: FlowScreen = {
+      uid: newUid,
       id: `screen_${generateId()}`,
       title: `Screen ${screens.length + 1}`,
       elements: []
     };
     setScreens([...screens, newScreen]);
-    setSelectedScreen(newScreen.id);
+    setSelectedScreen(newUid);
     toast.success('Screen added');
+
   }, [screens]);
 
-  const handleRemoveScreen = useCallback((screenId: string) => {
+  const handleRemoveScreen = useCallback((screenUid: string) => {
     if (screens.length <= 1) {
       toast.error('Cannot remove the only screen');
       return;
     }
-    setScreens(screens.filter(s => s.id !== screenId));
-    if (selectedScreen === screenId) {
-      setSelectedScreen(screens[0].id);
+    const newScreens = screens.filter(s => s.uid !== screenUid);
+    setScreens(newScreens);
+    if (selectedScreen === screenUid) {
+      setSelectedScreen(newScreens[0].uid);
     }
     setSelectedElement(null);
     toast.success('Screen removed');
+
+
   }, [screens, selectedScreen]);
 
   const handleAddElement = useCallback((screenId: string, type: FlowElementType) => {
-    // Check for unique form
+    const screen = screens.find(s => s.uid === screenId);
     if (type === 'Form') {
-      const screen = screens.find(s => s.id === screenId);
       if (screen?.elements.some(el => el.type === 'Form')) {
         toast.error('Only one Form allowed per screen');
         return;
@@ -386,6 +428,7 @@ export function FlowBuilder() {
     }
 
     const getDefaultProperties = (type: FlowElementType) => {
+
       switch (type) {
         case 'TextInput':
           return { 'input-type': 'text', label: 'New Input', required: true };
@@ -396,7 +439,8 @@ export function FlowBuilder() {
         case 'RadioButtonsGroup':
         case 'Dropdown':
         case 'CheckboxGroup':
-          return { label: 'Select Option', 'data-source': [{ id: 'opt_1', title: 'Option 1' }] };
+          return { label: 'Select Option', 'data-source': [{ uid: generateId(), id: 'opt_1', title: 'Option 1' }] };
+
         case 'DatePicker':
           return { label: 'Select Date' };
         case 'PhotoPicker':
@@ -417,10 +461,9 @@ export function FlowBuilder() {
             'max-uploaded-documents': 30,
             'allowed-mime-types': ['application/pdf', 'image/jpeg', 'image/png']
           };
-        case 'IfElse':
-          return { condition: 'data.field == true', trueDestination: '', falseDestination: '' };
         case 'NavigationList':
-          return { label: 'Menu', 'data-source': [{ id: 'nav_1', title: 'Item 1', onSelectAction: 'navigate' }] };
+          return { label: 'Menu', 'data-source': [{ uid: generateId(), id: 'nav_1', title: 'Item 1', onSelectAction: 'navigate' }] };
+
         case 'Image':
           return { url: '', altText: 'Image' };
         case 'TextHeading':
@@ -446,7 +489,7 @@ export function FlowBuilder() {
     };
 
     setScreens(screens.map(screen => {
-      if (screen.id === screenId) {
+      if (screen.uid === screenId) {
         // Enforce Meta Flow restriction: max 1 PhotoPicker OR DocumentPicker per screen
         if (['PhotoPicker', 'DocumentPicker'].includes(type)) {
           const hasPicker = screen.elements.some(el => ['PhotoPicker', 'DocumentPicker'].includes(el.type));
@@ -459,25 +502,28 @@ export function FlowBuilder() {
       }
       return screen;
     }));
+
     setSelectedElement(newElement.id);
   }, [screens]);
 
   const handleRemoveElement = useCallback((screenId: string, elementId: string) => {
     setScreens(screens.map(screen => {
-      if (screen.id === screenId) {
+      if (screen.uid === screenId) {
         return { ...screen, elements: screen.elements.filter(el => el.id !== elementId) };
       }
       return screen;
     }));
+
     setSelectedElement(null);
     toast.success('Element removed');
   }, [screens]);
 
   const handleElementMove = useCallback((screenId: string, elementId: string, direction: 'up' | 'down') => {
     setScreens(screens.map(screen => {
-      if (screen.id === screenId) {
+      if (screen.uid === screenId) {
         const index = screen.elements.findIndex(el => el.id === elementId);
         if (index === -1) return screen;
+
 
         const newElements = [...screen.elements];
         if (direction === 'up' && index > 0) {
@@ -494,8 +540,9 @@ export function FlowBuilder() {
 
 
   const handleScreenUpdate = useCallback((updatedScreen: FlowScreen) => {
-    setScreens(screens.map(s => s.id === updatedScreen.id ? updatedScreen : s));
+    setScreens(screens.map(s => s.uid === updatedScreen.uid ? updatedScreen : s));
   }, [screens]);
+
 
   const handleElementUpdate = useCallback((updatedElement: FlowElement) => {
     // Basic unique name validation within the screen
@@ -581,27 +628,26 @@ export function FlowBuilder() {
     const flowPayload = {
       name: data.flowName,
       clientId: data.clientId,
-      data: {
-        screens,
-      }
+      data: convertToApiFormat(screens), // Store valid Meta Flow JSON
+      builder_state: screens, // Store internal builder state (with UIDs)
     };
 
     if (saveMode === 'save') {
       try {
         if (flowId) {
-          await updateFlowMutation.mutateAsync({ _id: flowId, ...flowPayload });
-          toast.success('Flow draft updated');
+          await updateFlowMutation.mutateAsync({ _id: flowId, ...flowPayload, isDraft: true });
+          toast.success('Flow draft updated locally');
         } else {
           // If "Save Draft" but no ID, we still create it in DB as active:true but mark as draft in UI
-          const result = await createFlowMutation.mutateAsync(flowPayload);
+          const result = await createFlowMutation.mutateAsync({ ...flowPayload, isDraft: true });
           const newId = result.data?.data?._id;
           if (newId) {
             navigate(`/flow-builder/${newId}`, { replace: true });
           }
-          toast.success('Flow saved to database');
+          toast.success('Flow draft saved locally');
         }
       } catch (error: any) {
-        toast.error(error.response?.data?.message || 'Failed to save flow');
+        toast.error(error.response?.data?.message || 'Failed to save flow draft');
       }
     } else {
       // Create Flow Logic (Finalize/Publish)
@@ -633,7 +679,8 @@ export function FlowBuilder() {
     }
   };
 
-  const currentScreen = screens.find(s => s.id === selectedScreen) || null;
+  const currentScreen = screens.find(s => s.uid === selectedScreen) || null;
+
   const currentElement = currentScreen?.elements.find(e => e.id === selectedElement) || null;
 
   return (
@@ -647,7 +694,16 @@ export function FlowBuilder() {
         onViewModeChange={setViewMode}
       />
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
+        {(flowLoading || clientsLoading) && (
+          <div className="absolute inset-0 z-50 bg-background/50 backdrop-blur-[1px] flex items-center justify-center">
+            <div className="flex flex-col items-center gap-2">
+              <Workflow className="h-8 w-8 text-primary animate-spin" />
+              <p className="text-sm font-medium text-muted-foreground">Loading flow data...</p>
+            </div>
+          </div>
+        )}
+
         {viewMode === 'canvas' && <ElementPalette onDragStart={setDraggedElementType} />}
 
         {viewMode === 'canvas' ? (
@@ -656,6 +712,7 @@ export function FlowBuilder() {
             selectedScreen={selectedScreen}
             selectedElement={selectedElement}
             onScreenSelect={setSelectedScreen}
+
             onElementSelect={setSelectedElement}
             onAddScreen={handleAddScreen}
             onRemoveScreen={handleRemoveScreen}
@@ -671,17 +728,18 @@ export function FlowBuilder() {
               setScreens(updatedScreens);
 
               // Try to preserve selection if IDs match, otherwise reset
-              const stillHasScreen = updatedScreens.some(s => s.id === selectedScreen);
+              const stillHasScreen = updatedScreens.some(s => s.uid === selectedScreen);
               if (!stillHasScreen && updatedScreens.length > 0) {
-                setSelectedScreen(updatedScreens[0].id);
+                setSelectedScreen(updatedScreens[0].uid);
                 setSelectedElement(null);
               } else if (stillHasScreen) {
-                const screen = updatedScreens.find(s => s.id === selectedScreen);
+                const screen = updatedScreens.find(s => s.uid === selectedScreen);
                 const stillHasElement = screen?.elements.some(el => el.id === selectedElement);
                 if (!stillHasElement) {
                   setSelectedElement(null);
                 }
               }
+
 
               setViewMode('canvas');
               toast.success('JSON changes applied');

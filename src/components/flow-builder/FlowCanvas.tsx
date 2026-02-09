@@ -87,11 +87,12 @@ export function FlowCanvas({
       <div className="flex gap-6 min-w-max">
         {screens.map((screen, index) => (
           <div
-            key={screen.id}
+            key={screen.uid}
             className={cn(
               "animate-fade-in",
-              selectedScreen === screen.id && "ring-2 ring-primary ring-offset-2 ring-offset-canvas rounded-2xl"
+              selectedScreen === screen.uid && "ring-2 ring-primary ring-offset-2 ring-offset-canvas rounded-2xl"
             )}
+
             style={{ animationDelay: `${index * 50}ms` }}
           >
             {/* Screen Header */}
@@ -114,7 +115,7 @@ export function FlowCanvas({
                   variant="ghost"
                   size="icon"
                   className="w-6 h-6 text-muted-foreground hover:text-destructive"
-                  onClick={() => onRemoveScreen(screen.id)}
+                  onClick={() => onRemoveScreen(screen.uid)}
                 >
                   <X className="w-3 h-3" />
                 </Button>
@@ -125,14 +126,14 @@ export function FlowCanvas({
             <div
               className={cn(
                 "relative w-[320px] h-[640px] bg-card rounded-[2.5rem] border-2 border-border p-3 shadow-2xl cursor-pointer transition-all duration-200",
-                dragOverScreen === screen.id && "border-primary bg-primary/5"
+                dragOverScreen === screen.uid && "border-primary bg-primary/5"
               )}
               onClick={(e) => {
                 e.stopPropagation();
-                onScreenSelect(screen.id);
+                onScreenSelect(screen.uid);
               }}
-              onDrop={(e) => handleDrop(e, screen.id)}
-              onDragOver={(e) => handleDragOver(e, screen.id)}
+              onDrop={(e) => handleDrop(e, screen.uid)}
+              onDragOver={(e) => handleDragOver(e, screen.uid)}
               onDragLeave={handleDragLeave}
             >
               {/* Phone Notch */}
@@ -182,8 +183,8 @@ export function FlowCanvas({
                           e.stopPropagation();
                           onElementSelect(element.id);
                         }}
-                        onRemove={() => onRemoveElement(screen.id, element.id)}
-                        onMove={(direction) => onElementMove(screen.id, element.id, direction)}
+                        onRemove={() => onRemoveElement(screen.uid, element.id)}
+                        onMove={(direction) => onElementMove(screen.uid, element.id, direction)}
                       />
                     ))
                   )}

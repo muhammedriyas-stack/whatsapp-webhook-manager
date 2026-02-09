@@ -14,6 +14,7 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import MultiBot from "./pages/MultiBot";
 import FlowBuilderPro from "./pages/FlowBuilderPro";
+import Flows from "./pages/Flows";
 import Users from "./pages/Users";
 import { PermissionRoute } from "./components/PermissionRoute";
 import { PERMISSIONS } from "@/constants/common";
@@ -52,6 +53,14 @@ const App = () => (
                 element={
                   <PermissionRoute permission={PERMISSIONS.MANAGE_MULTIBOT}>
                     <MultiBot />
+                  </PermissionRoute>
+                }
+              />
+              <Route
+                path="/flows"
+                element={
+                  <PermissionRoute permission={PERMISSIONS.FLOW_BUILDER}>
+                    <Flows />
                   </PermissionRoute>
                 }
               />

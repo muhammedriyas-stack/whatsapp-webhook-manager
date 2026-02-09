@@ -27,12 +27,12 @@ export function AppSidebar() {
       { title: "Analytics", url: "/", icon: BarChart3, permission: PERMISSIONS.ANALYTICS },
       { title: "Clients", url: "/clients", icon: Users, permission: PERMISSIONS.MANAGE_CLIENTS },
       { title: "MultiBot", url: "/multibot", icon: Bot, permission: PERMISSIONS.MANAGE_MULTIBOT },
-      // {
-      //   title: "Flow Builder",
-      //   url: "/flow-builder",
-      //   icon: Workflow,
-      //   permission: PERMISSIONS.FLOW_BUILDER
-      // },
+      {
+        title: "Flows",
+        url: "/flows",
+        icon: Workflow,
+        permission: PERMISSIONS.FLOW_BUILDER
+      },
       {
         title: "Users",
         url: "/users",

@@ -22,17 +22,7 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-2">
-        {(user?.role === ROLES.ADMIN || user?.permissions?.includes(PERMISSIONS.FLOW_BUILDER)) && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate("/flow-builder")}
-            className="hidden md:flex gap-2"
-          >
-            <Workflow className="w-4 h-4" />
-            Open Flow Builder
-          </Button>
-        )}
+
         <Button
           variant="ghost"
           size="icon"

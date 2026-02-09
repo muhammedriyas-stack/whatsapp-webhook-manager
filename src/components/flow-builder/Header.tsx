@@ -89,9 +89,19 @@ export function Header({
           variant="ghost"
           size="sm"
           onClick={onSave}
+          disabled={isSubmitting}
         >
-          <Save className="w-4 h-4 mr-2" />
-          Save Draft
+          {isSubmitting ? (
+            <>
+              <Save className="w-4 h-4 mr-2 animate-pulse" />
+              Saving...
+            </>
+          ) : (
+            <>
+              <Save className="w-4 h-4 mr-2" />
+              Save Draft
+            </>
+          )}
         </Button>
 
         <Button variant="ghost" size="sm" onClick={onPreview}>

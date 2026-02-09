@@ -14,7 +14,7 @@ const PERMISSION_TO_ROUTE: Record<string, string> = {
     [PERMISSIONS.ANALYTICS]: "/",
     [PERMISSIONS.MANAGE_CLIENTS]: "/clients",
     [PERMISSIONS.MANAGE_MULTIBOT]: "/multibot",
-    [PERMISSIONS.FLOW_BUILDER]: "/flow-builder",
+    [PERMISSIONS.FLOW_BUILDER]: "/flows",
     [PERMISSIONS.MANAGE_USERS]: "/users",
 };
 
@@ -42,20 +42,25 @@ export function PermissionRoute({ children, permission }: PermissionRouteProps) 
         return <ProtectedRoute>{children}</ProtectedRoute>;
     }
 
-    // No access to this route.
-    // If we are on the root path, don't redirect to first available; just show the welcome screen below.
-    // This allows users to actually land on the dashboard without being forced into a module.
+    // If we are on the root path, redirect to the first available permission.
     if (pathname === "/") {
+        const firstAvailablePermission = Object.values(PERMISSIONS).find(p =>
+            user?.permissions?.includes(p) && PERMISSION_TO_ROUTE[p]
+        );
+
+        const targetRoute = firstAvailablePermission ? PERMISSION_TO_ROUTE[firstAvailablePermission] : null;
+
+        if (targetRoute) {
+            return <Navigate to={targetRoute} replace />;
+        }
+
         return (
             <ProtectedRoute>
                 <DashboardLayout>
                     <div className="flex flex-col items-center justify-center min-h-[60vh]">
                         <h1 className="text-2xl font-bold mb-2">Welcome</h1>
                         <p className="text-muted-foreground text-center max-w-md">
-                            {user?.permissions?.length === 0
-                                ? "You don't have any permissions assigned yet. Please contact your administrator."
-                                : "Please select an authorized module from the sidebar to continue."
-                            }
+                            You don't have any permissions assigned yet. Please contact your administrator.
                         </p>
                     </div>
                 </DashboardLayout>

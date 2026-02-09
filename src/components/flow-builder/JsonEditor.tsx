@@ -105,7 +105,7 @@ export function JsonEditor({ flowData, onApply }: JsonEditorProps) {
                 <textarea
                     value={jsonText}
                     onChange={(e) => setJsonText(e.target.value)}
-                    className="w-full h-full min-h-[600px] p-6 font-mono text-sm bg-background resize-none focus:outline-none focus:ring-1 focus:ring-primary/20"
+                    className="w-full h-full min-h-[100vh] p-6 font-mono text-sm bg-background resize-none focus:outline-none focus:ring-1 focus:ring-primary/20"
                     spellCheck={false}
                 />
             </ScrollArea>

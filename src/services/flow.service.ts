@@ -6,11 +6,18 @@ import { FlowData, FlowScreen } from "@/types/flow";
 export interface IFlow {
     _id: string;
     name: string;
+    flowId?: string;
+    status: "draft" | "published";
     clientId: any; // Can be string id or populated object
-    data: {
-        screens: FlowScreen[];
-    };
+    clientName?: string;
+    data: FlowData;
+    builder_state?: FlowScreen[];
     isActive: boolean;
+    isDraft?: boolean;
+    meta_flow_id?: string;
+    meta_sync_status?: "SUCCESS" | "FAILED" | "PENDING";
+    meta_error_message?: string;
+    meta_flow_status?: string;
     createdAt: string;
     updatedAt: string;
 }
@@ -59,6 +66,38 @@ export const useDeleteFlow = () => {
         mutationFn: deleteFlow,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["flows"] });
+        },
+    });
+};
+
+// SYNC Flow
+export const syncFlow = (id: string) => {
+    return api.post<GeneralApiResponse<IFlow>>(`${END_POINT}/${id}/sync`);
+};
+
+export const useSyncFlow = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: syncFlow,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["flows"] });
+            queryClient.invalidateQueries({ queryKey: ["flow"] });
+        },
+    });
+};
+
+// PUBLISH Flow
+export const publishFlow = (id: string) => {
+    return api.post<GeneralApiResponse<IFlow>>(`${END_POINT}/${id}/publish`);
+};
+
+export const usePublishFlow = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: publishFlow,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["flows"] });
+            queryClient.invalidateQueries({ queryKey: ["flow"] });
         },
     });
 };
