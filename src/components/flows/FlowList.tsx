@@ -18,10 +18,12 @@ import {
     MoreVertical,
     Workflow,
     RefreshCcw,
-    Send
+    Send,
+    Eye
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { IFlow, useGetFlows, useDeleteFlow, useSyncFlow, usePublishFlow } from "@/services/flow.service";
+import { IFlow, useGetFlows, useDeleteFlow, useSyncFlow, usePublishFlow, useDeprecateFlow, useGetFlowPreviewUrl } from "@/services/flow.service";
+import { MetaIframeDialog } from "../flow-builder/MetaIframeDialog";
 import { useGetProfile } from "@/services/auth.service";
 import { ROLES } from "@/constants/common";
 import { toast } from "sonner";
@@ -49,6 +51,7 @@ export function FlowList() {
     const deleteFlowMutation = useDeleteFlow();
     const syncFlowMutation = useSyncFlow();
     const publishFlowMutation = usePublishFlow();
+    const deprecateFlowMutation = useDeprecateFlow();
 
     // Confirmation Dialog State
     const [confirmState, setConfirmState] = useState<{
@@ -64,9 +67,16 @@ export function FlowList() {
         onConfirm: () => { },
     });
 
+    // Preview Dialog State
+    const [showMetaPreview, setShowMetaPreview] = useState(false);
+    const [metaPreviewUrl, setMetaPreviewUrl] = useState<string | null>(null);
+    const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+    const { mutateAsync: getFlowPreviewMutation } = useGetFlowPreviewUrl();
+
     const flows = flowsResponse?.data || [];
 
-    const isAnyActionPending = deleteFlowMutation.isPending || syncFlowMutation.isPending || publishFlowMutation.isPending;
+    const isAnyActionPending = deleteFlowMutation.isPending || syncFlowMutation.isPending || publishFlowMutation.isPending || deprecateFlowMutation.isPending;
+
 
     const handleDelete = (id: string) => {
         const flow = flows.find(f => f._id === id);
@@ -81,6 +91,26 @@ export function FlowList() {
                     toast.success("Flow deleted successfully");
                 } catch (error: any) {
                     toast.error(error.response?.data?.message || "Failed to delete flow");
+                } finally {
+                    setConfirmState(prev => ({ ...prev, open: false }));
+                }
+            }
+        });
+    };
+
+    const handleDeprecate = (id: string) => {
+        const flow = flows.find(f => f._id === id);
+        setConfirmState({
+            open: true,
+            title: "Deprecate Flow",
+            description: `Are you sure you want to deprecate "${flow?.name || 'this flow'}"? This will mark the flow as deprecated on Meta. Users will no longer be able to access this flow.`,
+            destructive: true,
+            onConfirm: async () => {
+                try {
+                    await deprecateFlowMutation.mutateAsync(id);
+                    toast.success("Flow deprecated successfully");
+                } catch (error: any) {
+                    toast.error(error.response?.data?.message || "Failed to deprecate flow");
                 } finally {
                     setConfirmState(prev => ({ ...prev, open: false }));
                 }
@@ -117,6 +147,34 @@ export function FlowList() {
         });
     };
 
+    const handlePreviewClick = async (flowId: string) => {
+        // Open dialog and start loading
+        setShowMetaPreview(true);
+        setIsLoadingPreview(true);
+        setMetaPreviewUrl(null);
+
+        try {
+            const response = await getFlowPreviewMutation(flowId);
+            const payload = response.data as any;
+
+            if (payload?.data?.preview?.preview_url) {
+                setMetaPreviewUrl(payload.data.preview.preview_url);
+                toast.success("Preview loaded successfully");
+            } else {
+                const message = payload?.message || "Could not generate Meta Preview. Ensure flow is synced & not deprecated.";
+                toast.error(message);
+                setShowMetaPreview(false);
+            }
+        } catch (error: any) {
+            console.error("Preview Error:", error);
+            const msg = error.response?.data?.message || "Failed to get preview URL";
+            toast.error(msg);
+            setShowMetaPreview(false);
+        } finally {
+            setIsLoadingPreview(false);
+        }
+    };
+
     return (
         <TooltipProvider>
             <div className="space-y-4">
@@ -143,7 +201,7 @@ export function FlowList() {
                                 <TableHead>Flow Name</TableHead>
                                 <TableHead>Flow ID</TableHead>
                                 <TableHead>Client</TableHead>
-                                <TableHead>Local Status</TableHead>
+                                {/* <TableHead>Local Status</TableHead> */}
                                 <TableHead>Meta Status</TableHead>
                                 <TableHead>Sync Status</TableHead>
                                 <TableHead>Created At</TableHead>
@@ -178,7 +236,7 @@ export function FlowList() {
                                         <TableCell>
                                             {flow.clientName || (typeof flow.clientId === 'object' ? flow.clientId?.displayName : "Unknown")}
                                         </TableCell>
-                                        <TableCell>
+                                        {/* <TableCell>
                                             {flow.status === "published" ? (
                                                 <Badge variant="default" className="bg-green-600">
                                                     Published
@@ -188,7 +246,7 @@ export function FlowList() {
                                                     Draft
                                                 </Badge>
                                             )}
-                                        </TableCell>
+                                        </TableCell> */}
                                         <TableCell>
                                             {!flow.meta_flow_id ? (
                                                 flow.meta_sync_status === "FAILED" ? (
@@ -209,24 +267,36 @@ export function FlowList() {
                                                 ) : (
                                                     <span className="text-muted-foreground text-xs italic">Not Created</span>
                                                 )
-                                            ) : flow.meta_flow_status === "PUBLISHED" ? (
-                                                <Badge variant="default" className="bg-green-600">
-                                                    Published
-                                                </Badge>
                                             ) : flow.meta_sync_status === "FAILED" ? (
                                                 <Tooltip>
                                                     <TooltipTrigger asChild>
                                                         <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-50 cursor-help">
-                                                            Draft (Sync Error)
+                                                            {flow.meta_flow_status || "Draft"} (Sync Error)
                                                         </Badge>
                                                     </TooltipTrigger>
                                                     <TooltipContent>
                                                         <p className="max-w-xs">{flow.meta_error_message || "Asset sync failed"}</p>
                                                     </TooltipContent>
                                                 </Tooltip>
+                                            ) : flow.meta_flow_status === "PUBLISHED" ? (
+                                                <Badge variant="default" className="bg-green-600">
+                                                    Published
+                                                </Badge>
+                                            ) : flow.meta_flow_status === "DEPRECATED" ? (
+                                                <Badge variant="outline" className="text-gray-600 border-gray-400 bg-gray-100">
+                                                    Deprecated
+                                                </Badge>
+                                            ) : flow.meta_flow_status === "THROTTLED" ? (
+                                                <Badge variant="outline" className="text-yellow-700 border-yellow-400 bg-yellow-50">
+                                                    Throttled
+                                                </Badge>
+                                            ) : flow.meta_flow_status === "BLOCKED" ? (
+                                                <Badge variant="destructive" className="bg-red-600">
+                                                    Blocked
+                                                </Badge>
                                             ) : (
                                                 <Badge variant="outline" className="text-blue-600 border-blue-200 bg-blue-50">
-                                                    Draft
+                                                    {flow.meta_flow_status || "Draft"}
                                                 </Badge>
                                             )}
                                         </TableCell>
@@ -260,6 +330,18 @@ export function FlowList() {
                                                     <ExternalLink className="h-4 w-4" />
                                                 </Button>
 
+                                                {flow.meta_flow_id && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => handlePreviewClick(flow._id)}
+                                                        title="Preview Flow"
+                                                        disabled={isAnyActionPending}
+                                                    >
+                                                        <Eye className="h-4 w-4 text-primary" />
+                                                    </Button>
+                                                )}
+
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
                                                         <Button
@@ -289,6 +371,16 @@ export function FlowList() {
                                                             Open Builder
                                                         </DropdownMenuItem>
 
+                                                        {flow.meta_flow_id && (
+                                                            <DropdownMenuItem
+                                                                onClick={() => handlePreviewClick(flow._id)}
+                                                                disabled={isAnyActionPending}
+                                                            >
+                                                                <Eye className="mr-2 h-4 w-4" />
+                                                                Preview Flow
+                                                            </DropdownMenuItem>
+                                                        )}
+
                                                         <DropdownMenuItem
                                                             onClick={() => handleSync(flow._id)}
                                                             disabled={isAnyActionPending}
@@ -315,17 +407,31 @@ export function FlowList() {
                                                         )}
 
                                                         {user?.role === ROLES.ADMIN && (
-                                                            <DropdownMenuItem
-                                                                className="text-destructive focus:text-destructive"
-                                                                onClick={() => handleDelete(flow._id)}
-                                                                disabled={isAnyActionPending}
-                                                            >
-                                                                <Trash2 className={cn(
-                                                                    "mr-2 h-4 w-4",
-                                                                    deleteFlowMutation.isPending && deleteFlowMutation.variables === flow._id && "animate-spin"
-                                                                )} />
-                                                                {deleteFlowMutation.isPending && deleteFlowMutation.variables === flow._id ? "Deleting..." : "Delete Flow"}
-                                                            </DropdownMenuItem>
+                                                            flow.meta_flow_status === "PUBLISHED" || flow.meta_flow_status === "DEPRECATED" ? (
+                                                                <DropdownMenuItem
+                                                                    className="text-orange-600 focus:text-orange-600"
+                                                                    onClick={() => handleDeprecate(flow._id)}
+                                                                    disabled={isAnyActionPending || flow.meta_flow_status === "DEPRECATED"}
+                                                                >
+                                                                    <Trash2 className={cn(
+                                                                        "mr-2 h-4 w-4",
+                                                                        deprecateFlowMutation.isPending && deprecateFlowMutation.variables === flow._id && "animate-spin"
+                                                                    )} />
+                                                                    {deprecateFlowMutation.isPending && deprecateFlowMutation.variables === flow._id ? "Deprecating..." : "Deprecate Flow"}
+                                                                </DropdownMenuItem>
+                                                            ) : (
+                                                                <DropdownMenuItem
+                                                                    className="text-destructive focus:text-destructive"
+                                                                    onClick={() => handleDelete(flow._id)}
+                                                                    disabled={isAnyActionPending}
+                                                                >
+                                                                    <Trash2 className={cn(
+                                                                        "mr-2 h-4 w-4",
+                                                                        deleteFlowMutation.isPending && deleteFlowMutation.variables === flow._id && "animate-spin"
+                                                                    )} />
+                                                                    {deleteFlowMutation.isPending && deleteFlowMutation.variables === flow._id ? "Deleting..." : "Delete Flow"}
+                                                                </DropdownMenuItem>
+                                                            )
                                                         )}
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
@@ -347,6 +453,14 @@ export function FlowList() {
                 destructive={confirmState.destructive}
                 onConfirm={confirmState.onConfirm}
                 onCancel={() => setConfirmState(prev => ({ ...prev, open: false }))}
+            />
+
+            <MetaIframeDialog
+                isOpen={showMetaPreview}
+                onClose={() => setShowMetaPreview(false)}
+                url={metaPreviewUrl}
+                isLoading={isLoadingPreview}
+                title="Meta Flow Preview"
             />
         </TooltipProvider>
     );

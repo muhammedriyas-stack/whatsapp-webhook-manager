@@ -6,13 +6,15 @@ import { FlowCanvas } from './FlowCanvas';
 import { PropertiesPanel } from './PropertiesPanel';
 import { JsonPreview } from './JsonPreview';
 import { PreviewModal } from './PreviewModal';
+import { MetaIframeDialog } from './MetaIframeDialog';
 import { JsonEditor } from './JsonEditor';
 import { SaveFlowDialog } from './SaveFlowDialog';
 import { FlowScreen, FlowElement, FlowElementType, FlowData, Client } from '@/types/flow';
 import { toast } from 'sonner';
 import { Workflow } from 'lucide-react';
 import { useGetClients } from '@/services/client.service';
-import { useCreateFlow, useUpdateFlow, useGetFlowById } from '@/services/flow.service';
+import { useCreateFlow, useUpdateFlow, useGetFlowById, useGetFlowPreviewUrl } from '@/services/flow.service';
+import { useIsMobile } from '@/hooks/hooks/use-mobile';
 
 // Helper to generate IDs for local state
 const generateId = () => Math.random().toString(36).substring(2, 9);
@@ -166,12 +168,19 @@ const convertToApiFormat = (screens: FlowScreen[]): FlowData => ({
       ['TextInput', 'TextArea', 'RadioButtonsGroup', 'Dropdown', 'CheckboxGroup', 'DatePicker', 'PhotoPicker', 'DocumentPicker'].includes(el.type)
     );
 
+    let formChildren = inputFields.map(el => formatElement(el));
+
+    // If there is a form, the footer should be inside it
+    if ((formElement || inputFields.length > 0) && footer) {
+      formChildren.push(formatElement(footer));
+    }
+
     if (formElement || inputFields.length > 0) {
       layoutChildren.push({
         type: 'Form',
         name: (formElement?.properties.name || 'flow_form').replace(/[^A-Za-z_]/g, ''),
         ...(formElement?.conditionalVisibility ? { visible: formElement.conditionalVisibility } : {}),
-        children: inputFields.map(el => formatElement(el))
+        children: formChildren
       });
     }
 
@@ -190,8 +199,8 @@ const convertToApiFormat = (screens: FlowScreen[]): FlowData => ({
 
     afterFormElements.forEach(el => layoutChildren.push(formatElement(el)));
 
-    // 6. Add Footer at the end
-    if (footer) {
+    // 6. Add Footer at the end ONLY if not already added to Form
+    if (footer && !formElement && inputFields.length === 0) {
       layoutChildren.push(formatElement(footer));
     }
 
@@ -308,7 +317,8 @@ export function FlowBuilder() {
 
   const [flowName, setFlowName] = useState('Untitled Flow');
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
-  const initialScreenUid = generateId();
+  // Generate initialScreenUid only once using useState
+  const [initialScreenUid] = useState(() => generateId());
   const [screens, setScreens] = useState<FlowScreen[]>([
     { uid: initialScreenUid, id: 'screen_1', title: 'Welcome', elements: [] }
   ]);
@@ -317,10 +327,14 @@ export function FlowBuilder() {
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [jsonCollapsed, setJsonCollapsed] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [showMetaPreview, setShowMetaPreview] = useState(false);
+  const [metaPreviewUrl, setMetaPreviewUrl] = useState<string | null>(null);
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [draggedElementType, setDraggedElementType] = useState<FlowElementType | null>(null);
   const [viewMode, setViewMode] = useState<'canvas' | 'json'>('canvas');
 
   // Backend Integration Hooks
+  const isMobile = useIsMobile();
   const { data: clientsData, isLoading: clientsLoading } = useGetClients({ isActive: true });
   const { data: existingFlow, isLoading: flowLoading } = useGetFlowById(flowId || '', !!flowId);
   const createFlowMutation = useCreateFlow();
@@ -336,6 +350,8 @@ export function FlowBuilder() {
     waba_id: c.whatsappBusinessId,
     has_access_token: !!c.accessToken
   }));
+
+
 
   // Load existing flow data
   useEffect(() => {
@@ -390,43 +406,38 @@ export function FlowBuilder() {
 
   const handleAddScreen = useCallback(() => {
     const newUid = generateId();
-    const newScreen: FlowScreen = {
-      uid: newUid,
-      id: `screen_${generateId()}`,
-      title: `Screen ${screens.length + 1}`,
-      elements: []
-    };
-    setScreens([...screens, newScreen]);
+    setScreens(prevScreens => {
+      const newScreen: FlowScreen = {
+        uid: newUid,
+        id: `screen_${generateId()}`,
+        title: `Screen ${prevScreens.length + 1}`,
+        elements: []
+      };
+      return [...prevScreens, newScreen];
+    });
     setSelectedScreen(newUid);
     toast.success('Screen added');
 
-  }, [screens]);
+  }, []);
 
   const handleRemoveScreen = useCallback((screenUid: string) => {
-    if (screens.length <= 1) {
-      toast.error('Cannot remove the only screen');
-      return;
-    }
-    const newScreens = screens.filter(s => s.uid !== screenUid);
-    setScreens(newScreens);
-    if (selectedScreen === screenUid) {
-      setSelectedScreen(newScreens[0].uid);
-    }
-    setSelectedElement(null);
-    toast.success('Screen removed');
+    setScreens(prevScreens => {
+      if (prevScreens.length <= 1) {
+        toast.error('Cannot remove the only screen');
+        return prevScreens;
+      }
+      const newScreens = prevScreens.filter(s => s.uid !== screenUid);
+      if (selectedScreen === screenUid && newScreens.length > 0) {
+        setSelectedScreen(newScreens[0].uid);
+      }
+      setSelectedElement(null);
+      toast.success('Screen removed');
+      return newScreens;
+    });
 
-
-  }, [screens, selectedScreen]);
+  }, [selectedScreen]);
 
   const handleAddElement = useCallback((screenId: string, type: FlowElementType) => {
-    const screen = screens.find(s => s.uid === screenId);
-    if (type === 'Form') {
-      if (screen?.elements.some(el => el.type === 'Form')) {
-        toast.error('Only one Form allowed per screen');
-        return;
-      }
-    }
-
     const getDefaultProperties = (type: FlowElementType) => {
 
       switch (type) {
@@ -488,26 +499,37 @@ export function FlowBuilder() {
       visibility: true
     };
 
-    setScreens(screens.map(screen => {
-      if (screen.uid === screenId) {
-        // Enforce Meta Flow restriction: max 1 PhotoPicker OR DocumentPicker per screen
-        if (['PhotoPicker', 'DocumentPicker'].includes(type)) {
-          const hasPicker = screen.elements.some(el => ['PhotoPicker', 'DocumentPicker'].includes(el.type));
-          if (hasPicker) {
-            toast.error(`You can only have one ${type === 'PhotoPicker' ? 'Photo' : 'Document'} Picker per screen.`);
-            return screen;
-          }
+    setScreens(prevScreens => {
+      // Check for Form restriction
+      if (type === 'Form') {
+        const screen = prevScreens.find(s => s.uid === screenId);
+        if (screen?.elements.some(el => el.type === 'Form')) {
+          toast.error('Only one Form allowed per screen');
+          return prevScreens;
         }
-        return { ...screen, elements: [...screen.elements, newElement] };
       }
-      return screen;
-    }));
+
+      return prevScreens.map(screen => {
+        if (screen.uid === screenId) {
+          // Enforce Meta Flow restriction: max 1 PhotoPicker OR DocumentPicker per screen
+          if (['PhotoPicker', 'DocumentPicker'].includes(type)) {
+            const hasPicker = screen.elements.some(el => ['PhotoPicker', 'DocumentPicker'].includes(el.type));
+            if (hasPicker) {
+              toast.error(`You can only have one ${type === 'PhotoPicker' ? 'Photo' : 'Document'} Picker per screen.`);
+              return screen;
+            }
+          }
+          return { ...screen, elements: [...screen.elements, newElement] };
+        }
+        return screen;
+      });
+    });
 
     setSelectedElement(newElement.id);
-  }, [screens]);
+  }, []);
 
   const handleRemoveElement = useCallback((screenId: string, elementId: string) => {
-    setScreens(screens.map(screen => {
+    setScreens(prevScreens => prevScreens.map(screen => {
       if (screen.uid === screenId) {
         return { ...screen, elements: screen.elements.filter(el => el.id !== elementId) };
       }
@@ -516,10 +538,10 @@ export function FlowBuilder() {
 
     setSelectedElement(null);
     toast.success('Element removed');
-  }, [screens]);
+  }, []);
 
   const handleElementMove = useCallback((screenId: string, elementId: string, direction: 'up' | 'down') => {
-    setScreens(screens.map(screen => {
+    setScreens(prevScreens => prevScreens.map(screen => {
       if (screen.uid === screenId) {
         const index = screen.elements.findIndex(el => el.id === elementId);
         if (index === -1) return screen;
@@ -536,37 +558,39 @@ export function FlowBuilder() {
       }
       return screen;
     }));
-  }, [screens]);
+  }, []);
 
 
   const handleScreenUpdate = useCallback((updatedScreen: FlowScreen) => {
-    setScreens(screens.map(s => s.uid === updatedScreen.uid ? updatedScreen : s));
-  }, [screens]);
+    setScreens(prevScreens => prevScreens.map(s => s.uid === updatedScreen.uid ? updatedScreen : s));
+  }, []);
 
 
   const handleElementUpdate = useCallback((updatedElement: FlowElement) => {
-    // Basic unique name validation within the screen
-    const screen = screens.find(s => s.elements.some(el => el.id === updatedElement.id));
-    if (screen) {
-      const duplicate = screen.elements.find(el =>
-        el.id !== updatedElement.id &&
-        el.properties.name === updatedElement.properties.name &&
-        updatedElement.properties.name // Only check if name is set
-      );
+    setScreens(prevScreens => {
+      // Basic unique name validation within the screen
+      const screen = prevScreens.find(s => s.elements.some(el => el.id === updatedElement.id));
+      if (screen) {
+        const duplicate = screen.elements.find(el =>
+          el.id !== updatedElement.id &&
+          el.properties.name === updatedElement.properties.name &&
+          updatedElement.properties.name // Only check if name is set
+        );
 
-      if (duplicate) {
-        toast.error(`The name "${updatedElement.properties.name}" is already used in this screen.`);
-        return;
+        if (duplicate) {
+          toast.error(`The name "${updatedElement.properties.name}" is already used in this screen.`);
+          return prevScreens;
+        }
       }
-    }
 
-    setScreens(screens.map(screen => ({
-      ...screen,
-      elements: screen.elements.map(el =>
-        el.id === updatedElement.id ? updatedElement : el
-      )
-    })));
-  }, [screens]);
+      return prevScreens.map(screen => ({
+        ...screen,
+        elements: screen.elements.map(el =>
+          el.id === updatedElement.id ? updatedElement : el
+        )
+      }));
+    });
+  }, []);
 
   const validateFlowContent = () => {
     if (screens.length === 0) {
@@ -577,6 +601,13 @@ export function FlowBuilder() {
     const emptyScreens = screens.filter(s => s.elements.length === 0);
     if (emptyScreens.length > 0) {
       toast.error(`Screen "${emptyScreens[0].title}" is empty. Please add elements.`);
+      return false;
+    }
+
+    // Check if at least one screen is marked as terminal OR has a footer (which implicitly makes it terminal)
+    const hasTerminalScreen = screens.some(s => s.terminal === true || s.elements.some(el => el.type === 'Footer'));
+    if (!hasTerminalScreen) {
+      toast.error('Flow must have at least one terminal screen. Please mark a screen as "Terminal Screen" in properties or add a Footer.');
       return false;
     }
 
@@ -637,12 +668,13 @@ export function FlowBuilder() {
         if (flowId) {
           await updateFlowMutation.mutateAsync({ _id: flowId, ...flowPayload, isDraft: true });
           toast.success('Flow draft updated locally');
+          navigate('/flows', { replace: true });
         } else {
           // If "Save Draft" but no ID, we still create it in DB as active:true but mark as draft in UI
           const result = await createFlowMutation.mutateAsync({ ...flowPayload, isDraft: true });
           const newId = result.data?.data?._id;
           if (newId) {
-            navigate(`/flow-builder/${newId}`, { replace: true });
+            navigate('/flows', { replace: true });
           }
           toast.success('Flow draft saved locally');
         }
@@ -659,20 +691,32 @@ export function FlowBuilder() {
 
       try {
         if (flowId) {
-          await updateFlowMutation.mutateAsync({ _id: flowId, ...flowPayload });
+          // Update existing flow
+          await updateFlowMutation.mutateAsync({
+            _id: flowId,
+            name: data.flowName,
+            data: flowPayload.data, // Use the converted data
+            builder_state: screens,
+            clientId: data.clientId,
+            isDraft: false
+          });
+          toast.success(`Flow "${data.flowName}" updated successfully!`);
+          navigate('/flows');
         } else {
-          const result = await createFlowMutation.mutateAsync(flowPayload);
-          const newId = result.data?.data?._id;
-          if (newId) {
-            navigate(`/flow-builder/${newId}`, { replace: true });
-          }
-        }
+          // Create new flow
+          await createFlowMutation.mutateAsync({
+            name: data.flowName,
+            data: flowPayload.data, // Use the converted data
+            builder_state: screens,
+            clientId: data.clientId
+          });
 
-        // Here we would trigger the actual Meta API creation if needed
-        // For now, we just save to our DB
-        toast.success(`Flow "${data.flowName}" created successfully for ${client.name}!`, {
-          description: 'The flow is now available in the database'
-        });
+          // For now, we just save to our DB
+          toast.success(`Flow "${data.flowName}" created successfully for ${client.name}!`, {
+            description: 'The flow is now available in the database'
+          });
+          navigate('/flows');
+        }
       } catch (error: any) {
         toast.error(error.response?.data?.message || 'Failed to create flow');
       }
@@ -683,15 +727,78 @@ export function FlowBuilder() {
 
   const currentElement = currentScreen?.elements.find(e => e.id === selectedElement) || null;
 
+  const { mutateAsync: getFlowPreviewMutation } = useGetFlowPreviewUrl();
+
+  const handlePreviewClick = async () => {
+    // If we have a local flow ID, check if it's synced
+    if (!flowId) {
+      toast.error("Please save the flow first to generate a preview.");
+      return;
+    }
+
+    // Open dialog and start loading
+    setShowMetaPreview(true);
+    setIsLoadingPreview(true);
+    setMetaPreviewUrl(null);
+
+    try {
+      const response = await getFlowPreviewMutation(flowId);
+
+      const payload = response.data as any;
+
+      if (payload?.data?.preview?.preview_url) {
+        setMetaPreviewUrl(payload.data.preview.preview_url);
+        setShowMetaPreview(true);
+        toast.success("Preview loaded successfully");
+      } else {
+        // Fallback or error
+        const message = payload?.message || "Could not generate Meta Preview. Ensure flow is synced.";
+        toast.error(message);
+        // Optional: Failover to local preview?
+        setShowPreview(true);
+      }
+    } catch (error: any) {
+      console.error("Preview Error:", error);
+      const msg = error.response?.data?.message || "Failed to get preview URL";
+      toast.error(msg);
+      setShowMetaPreview(false);
+    } finally {
+      setIsLoadingPreview(false);
+    }
+  };
+
+  // Render mobile blocking overlay
+  if (isMobile) {
+    return (
+      <div className="h-screen w-screen flex flex-col items-center justify-center bg-background p-6 text-center">
+        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6">
+          <Workflow className="w-8 h-8 text-primary" />
+        </div>
+        <h2 className="text-2xl font-bold mb-2">Desktop View Required</h2>
+        <p className="text-muted-foreground max-w-md mb-4">
+          The Flow Builder is optimized for desktop usage to provide the best experience. Please access this page from a larger screen.
+        </p>
+        <div className="mt-4 flex gap-2 items-end">
+          <div className="w-12 h-8 border-2 border-primary rounded bg-background flex items-center justify-center">
+            <div className="w-8 h-4 bg-muted animate-pulse rounded-sm"></div>
+          </div>
+          <span className="text-2xl">💻</span>
+        </div>
+      </div>
+    );
+  }
+
+
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
       <Header
         onSave={handleSaveClick}
-        onPreview={() => setShowPreview(true)}
+        onPreview={handlePreviewClick}
         onSubmit={handleSubmitClick}
         isSubmitting={isSubmitting}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
+        isEditMode={!!flowId}
       />
 
       <div className="flex-1 flex overflow-hidden relative">
@@ -766,6 +873,14 @@ export function FlowBuilder() {
         isOpen={showPreview}
         onClose={() => setShowPreview(false)}
         screens={screens}
+      />
+
+      <MetaIframeDialog
+        isOpen={showMetaPreview}
+        onClose={() => setShowMetaPreview(false)}
+        url={metaPreviewUrl}
+        isLoading={isLoadingPreview}
+        title="Meta Flow Preview"
       />
 
       <SaveFlowDialog

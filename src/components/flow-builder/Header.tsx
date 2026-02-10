@@ -13,6 +13,7 @@ interface HeaderProps {
   isSubmitting: boolean;
   viewMode: 'canvas' | 'json';
   onViewModeChange: (mode: 'canvas' | 'json') => void;
+  isEditMode?: boolean;
 }
 
 export function Header({
@@ -21,7 +22,8 @@ export function Header({
   onSubmit,
   isSubmitting,
   viewMode,
-  onViewModeChange
+  onViewModeChange,
+  isEditMode = false
 }: HeaderProps) {
   const navigate = useNavigate();
   const { signOut } = useAuth();
@@ -36,7 +38,7 @@ export function Header({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/flows")}
             title="Back to Dashboard"
           >
             <ArrowLeft className="w-5 h-5 text-muted-foreground" />
@@ -118,12 +120,12 @@ export function Header({
           {isSubmitting ? (
             <>
               <Zap className="w-4 h-4 mr-2 animate-pulse" />
-              Creating...
+              {isEditMode ? 'Updating...' : 'Creating...'}
             </>
           ) : (
             <>
               <Upload className="w-4 h-4 mr-2" />
-              Create Flow
+              {isEditMode ? 'Update Flow' : 'Create Flow'}
             </>
           )}
         </Button>

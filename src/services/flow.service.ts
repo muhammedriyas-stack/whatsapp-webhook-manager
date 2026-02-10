@@ -102,6 +102,22 @@ export const usePublishFlow = () => {
     });
 };
 
+// DEPRECATE Flow
+export const deprecateFlow = (id: string) => {
+    return api.post<GeneralApiResponse<IFlow>>(`${END_POINT}/${id}/deprecate`);
+};
+
+export const useDeprecateFlow = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: deprecateFlow,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["flows"] });
+            queryClient.invalidateQueries({ queryKey: ["flow"] });
+        },
+    });
+};
+
 // GET Flows
 export const getFlows = (queryObj?: any) => {
     const query = queryObj ? `?${new URLSearchParams(queryObj).toString()}` : "";
@@ -125,5 +141,16 @@ export const useGetFlowById = (id: string, enabled: boolean = true) => {
         queryKey: ["flow", id],
         queryFn: () => getFlowById(id).then((res) => res.data),
         enabled: !!id && enabled,
+    });
+};
+
+// GET Flow Preview URL
+export const getFlowPreviewUrl = (id: string) => {
+    return api.get<GeneralApiResponse<any>>(`${END_POINT}/${id}/preview`);
+};
+
+export const useGetFlowPreviewUrl = () => {
+    return useMutation({
+        mutationFn: getFlowPreviewUrl
     });
 };
