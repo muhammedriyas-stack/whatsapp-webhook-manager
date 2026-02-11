@@ -27,8 +27,8 @@ api.interceptors.response.use(
             localStorage.removeItem("user_token");
 
             // Avoid loop if already on /auth
-            if (window.location.pathname !== "/auth") {
-                window.location.href = "/auth";
+            if (window.location.pathname !== "/dashboard_webhook/auth") {
+                window.location.href = "/dashboard_webhook/auth";
             }
         }
 
