@@ -1097,7 +1097,7 @@ function renderElementProperties(
                       const newPayload = { ...payload };
                       availableFormFields.forEach(field => {
                         if (field.visible && field.name) {
-                          newPayload[field.name] = `\${ form.${field.name} } `;
+                          newPayload[field.name] = `\${form.${field.name}}`;
                         }
                       });
                       updateProperty('on-click-action', {
@@ -1113,8 +1113,8 @@ function renderElementProperties(
 
                 <div className="space-y-2.5">
                   {availableFormFields.map(field => {
-                    const isSelected = Object.values(payload).some(v => v === `\${ form.${field.name} } `);
-                    const payloadKey = Object.keys(payload).find(k => payload[k] === `\${ form.${field.name} } `) || field.name;
+                    const isSelected = Object.values(payload).some(v => v === `\${form.${field.name}}`);
+                    const payloadKey = Object.keys(payload).find(k => payload[k] === `\${form.${field.name}}`) || field.name;
 
                     return (
                       <div key={field.id} className={cn(
@@ -1129,9 +1129,9 @@ function renderElementProperties(
                               onCheckedChange={(checked) => {
                                 const newPayload = { ...payload };
                                 if (checked) {
-                                  newPayload[field.name] = `\${ form.${field.name} } `;
+                                  newPayload[field.name] = `\${form.${field.name}}`;
                                 } else {
-                                  const keyToRemove = Object.keys(newPayload).find(k => newPayload[k] === `\${ form.${field.name} } `);
+                                  const keyToRemove = Object.keys(newPayload).find(k => newPayload[k] === `\${form.${field.name}}`);
                                   if (keyToRemove) delete newPayload[keyToRemove];
                                 }
                                 updateProperty('on-click-action', {
@@ -1168,9 +1168,9 @@ function renderElementProperties(
                               onChange={(e) => {
                                 const newKey = e.target.value.replace(/[^A-Za-z_]/g, '');
                                 const newPayload = { ...payload };
-                                const oldKey = Object.keys(newPayload).find(k => newPayload[k] === `\${ form.${field.name} } `);
+                                const oldKey = Object.keys(newPayload).find(k => newPayload[k] === `\${form.${field.name}}`);
                                 if (oldKey) delete newPayload[oldKey];
-                                newPayload[newKey] = `\${ form.${field.name} } `;
+                                newPayload[newKey] = `\${form.${field.name}}`;
                                 updateProperty('on-click-action', {
                                   name: 'complete',
                                   payload: newPayload
